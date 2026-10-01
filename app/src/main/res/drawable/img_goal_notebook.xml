@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- PROVISÓRIO: apagar este XML e colocar a imagem exportada do Figma com o mesmo nome (.webp/.png). -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="1024dp"
+    android:height="1024dp"
+    android:viewportWidth="96"
+    android:viewportHeight="96">
+    <path
+        android:pathData="M0,0h96v96h-96z"
+        android:fillColor="#FFCCFBF1" />
+    <group
+        android:translateX="24"
+        android:translateY="24"
+        android:scaleX="2"
+        android:scaleY="2">
+        <path
+            android:pathData="M21.42 10.922a1 1 0 0 0-.019-1.838L12.83 5.18a2 2 0 0 0-1.66 0L2.6 9.08a1 1 0 0 0 0 1.832l8.57 3.908a2 2 0 0 0 1.66 0z"
+            android:strokeColor="#FF0D9488"
+            android:strokeWidth="1.5"
+            android:strokeLineCap="round"
+            android:strokeLineJoin="round" />
+        <path
+            android:pathData="M22 10v6"
+            android:strokeColor="#FF0D9488"
+            android:strokeWidth="1.5"
+            android:strokeLineCap="round"
+            android:strokeLineJoin="round" />
+        <path
+            android:pathData="M6 12.5V16a6 3 0 0 0 12 0v-3.5"
+            android:strokeColor="#FF0D9488"
+            android:strokeWidth="1.5"
+            android:strokeLineCap="round"
+            android:strokeLineJoin="round" />
+    </group>
+</vector>

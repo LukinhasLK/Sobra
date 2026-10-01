@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- Tema do app depois da abertura. -->
+    <style name="Theme.Sobra" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:windowBackground">@color/sobra_background</item>
+    </style>
+
+    <!-- Splash de sistema (SplashScreen API): fundo Teal + símbolo. Ao terminar, o
+         installSplashScreen() troca para o tema indicado em postSplashScreenTheme. -->
+    <style name="Theme.Sobra.Starting" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenBackground">@color/sobra_teal</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/ic_splash</item>
+        <item name="postSplashScreenTheme">@style/Theme.Sobra</item>
+    </style>
+</resources>

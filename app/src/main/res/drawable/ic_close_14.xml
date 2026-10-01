@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- PROVISÓRIO: substituir pelo SVG exportado do Figma (mesmo nome de arquivo). -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="14dp"
+    android:height="14dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <path
+        android:pathData="M18 6L6 18"
+        android:strokeColor="#FF000000"
+        android:strokeWidth="3.429"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round" />
+    <path
+        android:pathData="M6 6l12 12"
+        android:strokeColor="#FF000000"
+        android:strokeWidth="3.429"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round" />
+</vector>

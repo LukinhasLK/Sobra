@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Só o que o tema XML precisa (splash de sistema e fundo da janela antes do Compose).
+     As cores do app ficam em ui/theme/Color.kt; mantenha estes valores iguais aos de lá. -->
+<resources>
+    <color name="sobra_teal">#FF0D9488</color>
+    <color name="sobra_background">#FFFAF8F5</color>
+</resources>

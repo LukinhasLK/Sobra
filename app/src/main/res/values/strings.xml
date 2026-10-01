@@ -1,0 +1,228 @@
+<resources>
+    <string name="app_name">Sobra</string>
+
+    <!-- Marca / 01 Splash -->
+    <string name="brand_name">Sobra</string>
+    <string name="splash_tagline">FINANÇAS LEVES</string>
+    <!-- TODO: confirmar texto no Figma -->
+    <string name="splash_slogan_main">[Slogan principal]</string>
+    <!-- TODO: confirmar texto no Figma -->
+    <string name="splash_slogan_secondary">[Slogan secundário]</string>
+
+    <!-- Ações comuns -->
+    <string name="action_back">Voltar</string>
+    <string name="action_continue">Continuar</string>
+    <string name="action_finish">Concluir</string>
+    <string name="action_save">Salvar</string>
+    <string name="action_cancel">Cancelar</string>
+    <string name="action_close">Fechar</string>
+    <string name="action_login">Entrar</string>
+    <string name="action_create_account">Criar conta</string>
+    <string name="action_show">Mostrar</string>
+    <!-- TODO: confirmar texto no Figma (o mockup só mostra o estado "Mostrar") -->
+    <string name="action_hide">Ocultar</string>
+    <string name="action_retry">Tentar novamente</string>
+    <string name="action_ok">OK</string>
+    <string name="action_simulate">Simular</string>
+    <string name="action_new_simulation">Nova simulação</string>
+    <string name="action_create_goal">Criar objetivo</string>
+    <string name="action_add_contribution">Adicionar aporte</string>
+
+    <!-- Plural: o Android escolhe "mês" ou "meses" pela quantidade -->
+    <plurals name="months_count">
+        <item quantity="one">%1$d mês</item>
+        <item quantity="other">%1$d meses</item>
+    </plurals>
+
+    <!-- Navegação inferior -->
+    <string name="nav_home">Início</string>
+    <string name="nav_expenses">Gastos</string>
+    <string name="nav_goals">Objetivos</string>
+    <string name="nav_simulate">Simular</string>
+    <string name="nav_profile">Perfil</string>
+
+    <!-- Categorias -->
+    <string name="category_housing">Moradia</string>
+    <string name="category_food">Alimentação</string>
+    <string name="category_transport">Transporte</string>
+    <string name="category_health">Saúde</string>
+    <string name="category_education">Educação</string>
+    <string name="category_leisure">Lazer</string>
+    <string name="category_other">Outros</string>
+    <string name="category_add">Adicionar</string>
+
+    <!-- 02 a 04 Onboarding -->
+    <string name="onboarding_skip">Pular</string>
+    <string name="onboarding_next">Próximo</string>
+    <string name="onboarding_start">Começar</string>
+    <string name="onboarding_1_title">Organize seus gastos</string>
+    <string name="onboarding_1_description">Categorize suas despesas mensais sem esforço de forma simples, visual e direta.</string>
+    <string name="onboarding_2_title">Descubra quanto sobra</string>
+    <string name="onboarding_2_description">O segredo da tranquilidade financeira está no excedente. Saiba exatamente o que fica com você.</string>
+    <string name="onboarding_3_title">Simule o futuro</string>
+    <string name="onboarding_3_description">Veja seu dinheiro crescer com projeções didáticas baseadas na sua sobra mensal real.</string>
+
+    <!-- Campos de autenticação -->
+    <string name="field_email">E-mail</string>
+    <string name="field_password">Senha</string>
+    <string name="field_full_name">Nome completo</string>
+    <string name="field_confirm_password">Confirmar senha</string>
+
+    <!-- 05 Login -->
+    <string name="login_title">Boas-vindas ao Sobra</string>
+    <string name="login_description">Gerencie seus gastos e cultive sua saúde financeira.</string>
+    <!-- TODO: confirmar texto no Figma (placeholder do e-mail no Login não informado) -->
+    <string name="login_email_placeholder">seu@email.com</string>
+    <!-- TODO: confirmar texto no Figma (placeholder da senha no Login não informado) -->
+    <string name="login_password_placeholder">[Placeholder da senha]</string>
+    <string name="login_forgot_password">Esqueci minha senha</string>
+
+    <!-- 06 Cadastro -->
+    <string name="register_title">Crie sua conta</string>
+    <string name="register_description">Comece sua jornada rumo à tranquilidade hoje mesmo.</string>
+    <string name="register_name_placeholder">Como quer ser chamado?</string>
+    <string name="register_email_placeholder">seu@email.com</string>
+    <string name="register_password_placeholder">Crie uma senha forte</string>
+    <string name="register_confirm_placeholder">Repita a senha criada</string>
+    <string name="register_have_account">Já tenho conta.</string>
+    <string name="register_login_link">Fazer login</string>
+
+    <!-- 07 Recuperar senha -->
+    <string name="recover_title">Recuperar senha</string>
+    <string name="recover_description">Insira seu e-mail cadastrado e enviaremos um link de instrução para redefinir sua credencial.</string>
+    <string name="recover_email_label">Seu e-mail</string>
+    <!-- TODO: confirmar texto no Figma -->
+    <string name="recover_send">[Enviar]</string>
+    <string name="recover_back_to_login">Voltar ao login</string>
+
+    <!-- 08 Renda mensal / 09 Categorias -->
+    <string name="setup_step">PASSO %1$d DE %2$d</string>
+    <string name="income_caption">Renda mensal</string>
+    <string name="income_title">Qual sua renda mensal?</string>
+    <string name="income_description">Considere seu salário, pró-labore ou faturamento médio como autônomo.</string>
+    <string name="income_card_label">Valor recebido por mês</string>
+    <!-- TODO: confirmar texto no Figma -->
+    <string name="categories_caption">[Legenda do passo]</string>
+    <string name="categories_back">Passo anterior</string>
+    <!-- TODO: confirmar texto no Figma (título de duas linhas) -->
+    <string name="categories_title">[Título a confirmar no Figma]</string>
+    <!-- TODO: confirmar texto no Figma -->
+    <string name="categories_description">[Descrição a confirmar no Figma]</string>
+
+    <!-- 10 Home -->
+    <string name="home_greeting">Olá, %1$s 👋</string>
+    <string name="home_notifications">Notificações</string>
+    <string name="home_income">Renda</string>
+    <string name="home_expenses">Gastos</string>
+    <string name="home_available">Disponível</string>
+    <!-- TODO: confirmar texto no Figma -->
+    <string name="home_section_title">[Título da seção]</string>
+
+    <!-- 11 Gastos -->
+    <string name="expenses_title">Gastos</string>
+    <!-- TODO: confirmar texto no Figma -->
+    <string name="expenses_total_label">[Label do total]</string>
+    <string name="expenses_add">Adicionar despesa</string>
+
+    <!-- 12 Nova despesa -->
+    <!-- TODO: confirmar texto no Figma -->
+    <string name="new_expense_title">[Título]</string>
+    <!-- TODO: confirmar texto no Figma -->
+    <string name="new_expense_amount_label">[Label do valor]</string>
+    <string name="field_description">Descrição</string>
+    <string name="field_category">Categoria</string>
+    <string name="field_date">Data</string>
+    <string name="date_today">%1$s (Hoje)</string>
+
+    <!-- 13 Objetivos / 20 Estado vazio -->
+    <string name="goals_title">Objetivos</string>
+    <string name="goals_add">Adicionar objetivo</string>
+    <string name="goal_values">%1$s de %2$s</string>
+    <string name="goals_empty_title">Nenhum objetivo ainda</string>
+    <string name="goals_empty_description">Crie seu primeiro objetivo financeiro e comece a acompanhar seu progresso.</string>
+    <!-- TODO: confirmar texto no Figma -->
+    <string name="goals_empty_button">[Criar objetivo]</string>
+
+    <!-- 14 Novo objetivo -->
+    <string name="new_goal_title">Novo objetivo</string>
+    <!-- TODO: confirmar texto no Figma -->
+    <string name="new_goal_description">[Descrição a confirmar no Figma]</string>
+    <!-- TODO: confirmar texto no Figma -->
+    <string name="new_goal_name_label">[Label do nome]</string>
+    <string name="new_goal_target_label">Valor desejado</string>
+    <string name="new_goal_deadline_label">Prazo</string>
+    <string name="new_goal_deadline_value">%1$s (%2$s)</string>
+    <!-- TODO: confirmar texto no Figma -->
+    <string name="new_goal_suggestion_label">[Label do aporte sugerido]</string>
+    <string name="new_goal_suggestion_value">%1$s / mês</string>
+    <!-- TODO: confirmar texto no Figma -->
+    <string name="new_goal_suggestion_hint">[Explicação a confirmar no Figma]</string>
+
+    <!-- 15 Detalhe do objetivo -->
+    <string name="goal_detail_edit">Editar objetivo</string>
+    <string name="goal_detail_monthly">Aporte mensal</string>
+    <string name="goal_detail_forecast">Previsão de conclusão</string>
+    <string name="goal_detail_history">Histórico de aportes</string>
+
+    <!-- 16 Simular -->
+    <string name="simulate_title">Simular</string>
+    <string name="simulate_initial">Valor inicial</string>
+    <string name="simulate_monthly">Aporte mensal</string>
+    <string name="simulate_term">Prazo</string>
+    <!-- TODO: confirmar texto no Figma -->
+    <string name="simulate_rate_title">[Taxa]</string>
+    <!-- TODO: confirmar texto no Figma -->
+    <string name="simulate_rate_hint">[Explicação da taxa a confirmar no Figma]</string>
+
+    <!-- 17 Resultado da simulação -->
+    <!-- TODO: confirmar texto no Figma -->
+    <string name="result_total_invested">[Total investido]</string>
+    <!-- TODO: confirmar texto no Figma -->
+    <string name="result_final_estimate">[Estimativa final]</string>
+    <!-- TODO: confirmar texto no Figma -->
+    <string name="result_chart_title">[Título do gráfico]</string>
+    <!-- TODO: confirmar texto no Figma -->
+    <string name="result_legend_with_yield">Com rendimento</string>
+    <string name="result_legend_without_yield">Sem Rendimento</string>
+    <string name="result_initial">Valor inicial</string>
+    <string name="result_contributions">Total dos aportes (%1$dx)</string>
+    <string name="result_yield">Rendimento estimado</string>
+
+    <!-- 18 Simulações salvas -->
+    <!-- TODO: confirmar texto no Figma -->
+    <string name="saved_title">[Título]</string>
+    <string name="saved_subtitle">Suas Simulações</string>
+    <!-- TODO: confirmar texto no Figma -->
+    <string name="saved_badge">[tag]</string>
+    <!-- TODO: confirmar texto no Figma (labels das três colunas) -->
+    <string name="saved_initial">Inicial</string>
+    <string name="saved_monthly">Aporte</string>
+    <string name="saved_term">Prazo</string>
+    <string name="saved_term_value">%1$d m</string>
+    <string name="saved_result">Resultado estimado</string>
+
+    <!-- 19 Perfil -->
+    <string name="profile_title">Perfil</string>
+    <string name="profile_personal_data">Dados pessoais</string>
+    <string name="profile_security">Segurança</string>
+    <string name="profile_notifications">Notificações</string>
+    <string name="profile_about">Sobre</string>
+    <string name="profile_terms">Termos</string>
+    <string name="profile_logout">Sair da conta</string>
+
+    <!-- 22 Estado de erro -->
+    <string name="error_header">Erro</string>
+    <string name="error_title">Algo deu errado</string>
+    <!-- TODO: confirmar texto no Figma -->
+    <string name="error_description">[Descrição a confirmar no Figma]</string>
+
+    <!-- 23 Confirmação -->
+    <string name="confirmation_title">Gasto adicionado!</string>
+    <!-- TODO: confirmar texto no Figma -->
+    <string name="confirmation_description">[Descrição a confirmar no Figma]</string>
+
+    <!-- 24 Sessão expirada -->
+    <string name="session_title">Sessão expirada</string>
+    <string name="session_description">Por segurança, sua sessão foi encerrada. Faça login novamente para continuar.</string>
+    <string name="session_button">Fazer login</string>
+</resources>

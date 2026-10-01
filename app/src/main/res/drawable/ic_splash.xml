@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- PROVISÓRIO: trocar o símbolo pelo vetor do logo exportado do Figma. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="288dp"
+    android:height="288dp"
+    android:viewportWidth="288"
+    android:viewportHeight="288">
+    <path
+        android:pathData="M96,144a48,48 0 1,0 96,0a48,48 0 1,0 -96,0"
+        android:fillColor="#FFFFFFFF" />
+    <group
+        android:translateX="122"
+        android:translateY="122"
+        android:scaleX="1.8333"
+        android:scaleY="1.8333">
+        <path
+            android:pathData="M19 7V4a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1"
+            android:strokeColor="#FF0D9488"
+            android:strokeWidth="1.091"
+            android:strokeLineCap="round"
+            android:strokeLineJoin="round" />
+        <path
+            android:pathData="M3 5v14a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-4"
+            android:strokeColor="#FF0D9488"
+            android:strokeWidth="1.091"
+            android:strokeLineCap="round"
+            android:strokeLineJoin="round" />
+    </group>
+</vector>
