@@ -73,4 +73,18 @@ class FormattersTest {
         val value = BigDecimal("1234.56")
         assertEquals(value, parseMoneyInput(value.toBrlNumber()))
     }
+
+    // ---- Datas da tela Gastos ----
+
+    @Test
+    fun dayHeaderIsDayAndFullMonthInPortuguese() {
+        assertEquals("18 de setembro", java.time.LocalDate.of(2026, 9, 18).toDayMonthLong())
+        assertEquals("1 de março", java.time.LocalDate.of(2026, 3, 1).toDayMonthLong())
+    }
+
+    @Test
+    fun shortMonthIsCapitalizedWithoutDot() {
+        assertEquals("Set", java.time.YearMonth.of(2026, 9).toShortMonth())
+        assertEquals("Mai", java.time.YearMonth.of(2026, 5).toShortMonth())
+    }
 }

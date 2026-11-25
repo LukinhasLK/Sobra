@@ -27,9 +27,7 @@ import com.unasp.sobra.ui.components.AddContributionDialog
 import com.unasp.sobra.ui.components.CategoryAmountDialog
 import com.unasp.sobra.ui.components.GoalTermPickerDialog
 import com.unasp.sobra.ui.components.LoadingScreen
-import com.unasp.sobra.ui.components.CategoryPickerDialog
 import com.unasp.sobra.ui.components.ExpenseDatePickerDialog
-import com.unasp.sobra.ui.components.MonthPickerDialog
 import com.unasp.sobra.ui.model.Category
 import com.unasp.sobra.ui.screens.auth.LoginScreen
 import com.unasp.sobra.ui.screens.auth.RecoverPasswordScreen
@@ -66,7 +64,6 @@ import com.unasp.sobra.ui.viewmodel.NewExpenseViewModel
 import com.unasp.sobra.ui.viewmodel.ProfileViewModel
 import com.unasp.sobra.ui.viewmodel.SetupViewModel
 import com.unasp.sobra.ui.viewmodel.HomeViewModel
-import java.time.LocalDate
 import java.time.YearMonth
 import kotlinx.coroutines.delay
 
@@ -320,24 +317,16 @@ fun SobraNavHost(modifier: Modifier = Modifier) {
         // ---- 11 Gastos ----
         composable(Routes.EXPENSES) {
             val vm: ExpensesViewModel = viewModel()
-            var pickingMonth by remember { mutableStateOf(false) }
             LaunchedEffect(Unit) { vm.refresh() }
             when (val state = vm.state) {
                 Load.Error -> ErrorScreen(onBack = vm::load, onRetry = vm::load, onTabSelected = onTab)
                 else -> ExpensesScreen(
                     month = vm.month,
-                    // Enquanto carrega, mostra a tela sem itens (não há skeleton de Gastos no design).
                     expenses = (state as? Load.Success)?.data?.expenses.orEmpty(),
-                    onMonthClick = { pickingMonth = true },
+                    loading = state == Load.Loading,
+                    onMonthSelected = vm::selectMonth,
                     onAddExpense = { nav.navigate(Routes.NEW_EXPENSE) },
                     onTabSelected = onTab,
-                )
-            }
-            if (pickingMonth) {
-                MonthPickerDialog(
-                    selected = vm.month,
-                    onSelect = vm::selectMonth,
-                    onDismiss = { pickingMonth = false },
                 )
             }
         }
@@ -345,17 +334,15 @@ fun SobraNavHost(modifier: Modifier = Modifier) {
         // ---- 12 Nova despesa ----
         composable(Routes.NEW_EXPENSE) {
             val vm: NewExpenseViewModel = viewModel()
-            var pickingCategory by remember { mutableStateOf(false) }
             var pickingDate by remember { mutableStateOf(false) }
             NewExpenseScreen(
                 amount = vm.amount, onAmountChange = vm::changeAmount,
                 description = vm.description, onDescriptionChange = vm::changeDescription,
-                category = vm.category,
-                onCategoryClick = { pickingCategory = true },
-                date = vm.date,
-                isToday = vm.date == LocalDate.now(),
-                onDateClick = { pickingDate = true },
+                category = vm.category, onCategorySelected = vm::changeCategory,
+                date = vm.date, onDateSelected = vm::changeDate,
+                onPickOtherDate = { pickingDate = true },
                 errorMessage = vm.error,
+                saving = vm.loading,
                 onClose = { nav.popBackStack() },
                 onSave = {
                     vm.save {
@@ -367,9 +354,6 @@ fun SobraNavHost(modifier: Modifier = Modifier) {
                 },
                 onCancel = { nav.popBackStack() },
             )
-            if (pickingCategory) {
-                CategoryPickerDialog(vm.category, vm::changeCategory) { pickingCategory = false }
-            }
             if (pickingDate) {
                 ExpenseDatePickerDialog(vm.date, vm::changeDate) { pickingDate = false }
             }

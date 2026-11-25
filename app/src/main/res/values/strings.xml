@@ -248,4 +248,17 @@
     <string name="home_goals_see_all">Ver todos</string>
     <string name="home_goals_add">Novo objetivo</string>
     <string name="home_spending_empty">Nenhum gasto registrado neste mês.</string>
+
+    <!-- Gastos e Nova despesa refinados -->
+    <string name="expenses_total_month">Total de %1$s</string>
+    <plurals name="expenses_count">
+        <item quantity="one">%1$d despesa</item>
+        <item quantity="other">%1$d despesas</item>
+    </plurals>
+    <string name="expenses_empty_title">Nenhum gasto em %1$s</string>
+    <string name="expenses_empty_description">Toque em + para registrar uma despesa deste mês.</string>
+    <string name="day_today">Hoje</string>
+    <string name="day_yesterday">Ontem</string>
+    <string name="day_other">Outra data</string>
+    <string name="action_saving">Salvando…</string>
 </resources>

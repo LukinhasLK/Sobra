@@ -137,6 +137,7 @@ fun WhiteTextField(
     value: String,
     onValueChange: (String) -> Unit,
     modifier: Modifier = Modifier,
+    keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
 ) {
     WhiteField(label = label, modifier = modifier) {
         BasicTextField(
@@ -144,6 +145,7 @@ fun WhiteTextField(
             onValueChange = onValueChange,
             modifier = Modifier.weight(1f),
             singleLine = true,
+            keyboardOptions = keyboardOptions,
             textStyle = WhiteFieldText.copy(color = SobraColors.TextPrimary),
             cursorBrush = SolidColor(SobraColors.Teal),
         )

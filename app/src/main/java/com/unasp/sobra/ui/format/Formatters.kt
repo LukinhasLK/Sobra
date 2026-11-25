@@ -76,6 +76,12 @@ fun LocalDate.toShortMonthDate(): String {
     return "%02d de %s, %d".format(PT_BR, dayOfMonth, shortMonth, year)
 }
 
+/** "18 de setembro": cabeçalho de dia na lista de Gastos. */
+fun LocalDate.toDayMonthLong(): String = "%d de %s".format(PT_BR, dayOfMonth, month.getDisplayName(TextStyle.FULL, PT_BR))
+
+/** "Set": mês abreviado da fileira de meses. */
+fun YearMonth.toShortMonth(): String = month.getDisplayName(TextStyle.SHORT, PT_BR).removeSuffix(".").capitalizeFirst()
+
 /** "Março 2028". */
 fun YearMonth.toMonthYear(): String =
     month.getDisplayName(TextStyle.FULL, PT_BR).capitalizeFirst() + " " + year

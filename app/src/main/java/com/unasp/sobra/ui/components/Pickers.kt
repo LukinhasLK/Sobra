@@ -30,10 +30,8 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.window.Dialog
 import com.unasp.sobra.R
-import com.unasp.sobra.data.CATEGORY_ORDER
 import com.unasp.sobra.data.ContributionType
 import com.unasp.sobra.ui.format.toFullDate
-import com.unasp.sobra.ui.format.toMonthYear
 import com.unasp.sobra.ui.model.Category
 import com.unasp.sobra.ui.theme.Dimens
 import com.unasp.sobra.ui.theme.SobraColors
@@ -42,17 +40,14 @@ import com.unasp.sobra.ui.theme.manrope
 import java.math.BigDecimal
 import java.time.Instant
 import java.time.LocalDate
-import java.time.YearMonth
 import java.time.ZoneOffset
 
-// Seletores abertos pelos campos de Nova despesa, Gastos e Categorias. O Figma só desenha os
+// Seletores abertos pelos campos de Categorias (valor), Novo objetivo (prazo), novo aporte e data. O Figma só desenha os
 // campos fechados, então estes diálogos reaproveitam o estilo dos cards (raio, borda, cores).
 
 private val DialogTitle = manrope(18, FontWeight.W700)
 private val DialogText = manrope(14, FontWeight.W400)
 private val OptionText = manrope(15, FontWeight.W600)
-
-private const val MONTHS_LISTED = 12
 
 /** Moldura comum dos diálogos: card branco centralizado com título. */
 @Composable
@@ -86,45 +81,6 @@ private fun OptionRow(selected: Boolean, onClick: () -> Unit, content: @Composab
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(Dimens.Space12),
     ) { content() }
-}
-
-/** Escolha da categoria da despesa (as 7 da API). */
-@Composable
-fun CategoryPickerDialog(selected: Category, onSelect: (Category) -> Unit, onDismiss: () -> Unit) {
-    PickerDialog(stringResource(R.string.picker_category_title), onDismiss) {
-        LazyColumn(
-            modifier = Modifier.heightIn(max = ListMaxHeight),
-            verticalArrangement = Arrangement.spacedBy(Dimens.Space8),
-        ) {
-            items(CATEGORY_ORDER, key = { it.name }) { category ->
-                OptionRow(selected = category == selected, onClick = { onSelect(category); onDismiss() }) {
-                    SobraIcon(category.icon16, tint = SobraColors.Teal)
-                    Text(stringResource(category.label), style = OptionText, color = SobraColors.TextPrimary)
-                }
-            }
-        }
-    }
-}
-
-/** Escolha do mês da lista de Gastos: do mês atual até 11 meses atrás. */
-@Composable
-fun MonthPickerDialog(selected: YearMonth, onSelect: (YearMonth) -> Unit, onDismiss: () -> Unit) {
-    val months = remember {
-        val now = YearMonth.now()
-        (0 until MONTHS_LISTED).map { now.minusMonths(it.toLong()) }
-    }
-    PickerDialog(stringResource(R.string.picker_month_title), onDismiss) {
-        LazyColumn(
-            modifier = Modifier.heightIn(max = ListMaxHeight),
-            verticalArrangement = Arrangement.spacedBy(Dimens.Space8),
-        ) {
-            items(months, key = { it.toString() }) { month ->
-                OptionRow(selected = month == selected, onClick = { onSelect(month); onDismiss() }) {
-                    Text(month.toMonthYear(), style = OptionText, color = SobraColors.TextPrimary)
-                }
-            }
-        }
-    }
 }
 
 /** Valor estimado de uma categoria (passo 2 da configuração). Valor zero = categoria inativa. */
