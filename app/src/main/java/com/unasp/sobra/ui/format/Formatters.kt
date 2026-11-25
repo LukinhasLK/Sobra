@@ -30,11 +30,21 @@ private fun decimalFormat(pattern: String) = DecimalFormat(pattern, SYMBOLS).app
 /** "1.200,00" (sem o prefixo). Função de extensão: chama-se como `valor.toBrlNumber()`. */
 fun BigDecimal.toBrlNumber(): String = decimalFormat("#,##0.00").format(this)
 
+/**
+ * Valor negativo vai como "-R$ 80,00" (o sinal antes do símbolo, como se escreve em português),
+ * e não "R$ -80,00". O arredondamento vem antes do sinal: -0,001 vira "R$ 0,00", sem "-".
+ */
+private fun BigDecimal.formatMoney(scale: Int, pattern: String): String {
+    val rounded = setScale(scale, RoundingMode.HALF_UP)
+    val text = CURRENCY_PREFIX + decimalFormat(pattern).format(rounded.abs())
+    return if (rounded.signum() < 0) "-$text" else text
+}
+
 /** "R$ 1.200,00". */
-fun BigDecimal.toBrl(): String = CURRENCY_PREFIX + toBrlNumber()
+fun BigDecimal.toBrl(): String = formatMoney(CENTS_SCALE, "#,##0.00")
 
 /** "R$ 1.200" — forma curta, sem centavos, usada em chips, categorias e objetivos. */
-fun BigDecimal.toBrlShort(): String = CURRENCY_PREFIX + decimalFormat("#,##0").format(this)
+fun BigDecimal.toBrlShort(): String = formatMoney(0, "#,##0")
 
 /** "+ R$ 500,00" — aportes e rendimento. */
 fun BigDecimal.toBrlPositive(): String = "+ " + toBrl()
