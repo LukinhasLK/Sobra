@@ -27,6 +27,10 @@ import com.unasp.sobra.data.Graph
 import com.unasp.sobra.domain.SimulationResult
 import com.unasp.sobra.domain.simulate
 import com.unasp.sobra.ui.components.BottomTab
+import com.unasp.sobra.ui.components.CategoryAmountDialog
+import com.unasp.sobra.ui.components.CategoryPickerDialog
+import com.unasp.sobra.ui.components.ExpenseDatePickerDialog
+import com.unasp.sobra.ui.components.MonthPickerDialog
 import com.unasp.sobra.ui.model.Category
 import com.unasp.sobra.ui.screens.auth.LoginScreen
 import com.unasp.sobra.ui.screens.auth.RecoverPasswordScreen
@@ -52,7 +56,11 @@ import com.unasp.sobra.ui.screens.states.ErrorScreen
 import com.unasp.sobra.ui.screens.states.HomeSkeletonScreen
 import com.unasp.sobra.ui.screens.states.SessionExpiredScreen
 import com.unasp.sobra.ui.viewmodel.AuthViewModel
-import com.unasp.sobra.ui.viewmodel.HomeState
+import com.unasp.sobra.ui.viewmodel.ExpensesViewModel
+import com.unasp.sobra.ui.viewmodel.Load
+import com.unasp.sobra.ui.viewmodel.NewExpenseViewModel
+import com.unasp.sobra.ui.viewmodel.ProfileViewModel
+import com.unasp.sobra.ui.viewmodel.SetupViewModel
 import com.unasp.sobra.ui.viewmodel.HomeViewModel
 import java.time.LocalDate
 import java.time.YearMonth
@@ -131,8 +139,9 @@ private fun NavHostController.navigateClearingStack(route: String) {
  * Grafo de navegação do app.
  *
  * As telas são "sem estado": cada bloco `composable(...)` abaixo guarda o estado mínimo
- * da tela com `remember` e usa DemoData no lugar dos dados reais.
- * TODO(back end): trocar cada `remember`/DemoData por um ViewModel ligado ao repositório.
+ * da tela com `remember` ou ViewModel. Login, cadastro, configuração, Home, Gastos e Perfil
+ * já usam a API; Objetivos e Simular ainda usam DemoData.
+ * TODO(back end): trocar o DemoData restante por ViewModels ligados aos repositórios.
  */
 @Composable
 fun SobraNavHost(modifier: Modifier = Modifier) {
@@ -141,6 +150,9 @@ fun SobraNavHost(modifier: Modifier = Modifier) {
 
     // Último resultado calculado em "Simular", lido pela tela de resultado.
     var simulationResult by remember { mutableStateOf<SimulationResult?>(null) }
+
+    // Renda e categorias da configuração inicial: um só estado para os dois passos.
+    val setup: SetupViewModel = viewModel()
 
     // Quando a API diz que a sessão venceu (qualquer tela), abre a tela 24 e limpa a pilha.
     LaunchedEffect(Unit) {
@@ -195,6 +207,7 @@ fun SobraNavHost(modifier: Modifier = Modifier) {
                 onForgotPassword = { nav.navigate(Routes.RECOVER_PASSWORD) },
                 onLogin = {
                     auth.login(email, password) { setupDone ->
+                        setup.reset() // outra pessoa pode ter usado o app antes
                         // Conta nova sem configuração segue para renda e categorias.
                         nav.navigateClearingStack(if (setupDone) Routes.HOME else Routes.INCOME)
                     }
@@ -218,7 +231,10 @@ fun SobraNavHost(modifier: Modifier = Modifier) {
                 confirmPassword = confirmPassword, onConfirmPasswordChange = { confirmPassword = it },
                 onBack = { nav.popBackStack() },
                 onCreateAccount = {
-                    auth.register(name, email, password, confirmPassword) { nav.navigate(Routes.INCOME) }
+                    auth.register(name, email, password, confirmPassword) {
+                        setup.reset()
+                        nav.navigate(Routes.INCOME)
+                    }
                 },
                 onGoToLogin = { nav.popBackStack(Routes.LOGIN, inclusive = false) },
             )
@@ -238,36 +254,49 @@ fun SobraNavHost(modifier: Modifier = Modifier) {
 
         // ---- 08 Renda mensal ----
         composable(Routes.INCOME) {
-            var income by rememberSaveable { mutableStateOf(DemoData.setupIncome) }
             IncomeScreen(
-                income = income, onIncomeChange = { income = it },
+                income = setup.income, onIncomeChange = setup::changeIncome,
+                errorMessage = setup.error,
                 onBack = { nav.popBackStack() },
-                onContinue = { nav.navigate(Routes.CATEGORIES) }, // TODO(back end): salvar a renda
+                onContinue = { setup.saveIncome { nav.navigate(Routes.CATEGORIES) } },
             )
         }
 
         // ---- 09 Categorias ----
         composable(Routes.CATEGORIES) {
+            // Tocar num chip abre um pequeno diálogo para informar o valor estimado da categoria.
+            var editing by remember { mutableStateOf<Category?>(null) }
             CategoriesScreen(
-                budgets = DemoData.categoryBudgets,
-                onCategoryClick = { /* TODO: edição do valor da categoria não definida no design */ },
+                budgets = setup.budgets,
+                errorMessage = setup.error,
+                onCategoryClick = { editing = it },
                 onBack = { nav.popBackStack() },
-                onFinish = { nav.navigateClearingStack(Routes.HOME) }, // TODO(back end): salvar categorias
+                onFinish = { setup.saveCategories { nav.navigateClearingStack(Routes.HOME) } },
             )
+            editing?.let { category ->
+                CategoryAmountDialog(
+                    category = category,
+                    initial = setup.budgets.firstOrNull { it.category == category }?.amount,
+                    onConfirm = { setup.setBudget(category, it) },
+                    onDismiss = { editing = null },
+                )
+            }
         }
 
         // ---- 10 Home ----
         composable(Routes.HOME) {
             val vm: HomeViewModel = viewModel()
+            // Roda toda vez que a Home volta a aparecer (ex.: depois de salvar uma despesa).
+            LaunchedEffect(Unit) { vm.refresh() }
             // As três telas que o design já tinha: skeleton (21), erro (22) e a Home (10).
             when (val state = vm.state) {
-                HomeState.Loading -> HomeSkeletonScreen(onTabSelected = onTab)
-                HomeState.Error -> ErrorScreen(
+                Load.Loading -> HomeSkeletonScreen(onTabSelected = onTab)
+                Load.Error -> ErrorScreen(
                     onBack = vm::load, // a Home é a raiz: não há tela anterior, então "voltar" recarrega
                     onRetry = vm::load,
                     onTabSelected = onTab,
                 )
-                is HomeState.Success -> HomeScreen(
+                is Load.Success -> HomeScreen(
                     userName = state.data.firstName,
                     avatar = R.drawable.img_avatar, // TODO: a API devolve avatar_url (catálogo de imagens)
                     income = state.data.income,
@@ -280,38 +309,60 @@ fun SobraNavHost(modifier: Modifier = Modifier) {
 
         // ---- 11 Gastos ----
         composable(Routes.EXPENSES) {
-            ExpensesScreen(
-                month = DemoData.expensesMonth,
-                expenses = DemoData.expenses,
-                onMonthClick = { /* TODO: seletor de mês aberto não existe no Figma */ },
-                onAddExpense = { nav.navigate(Routes.NEW_EXPENSE) },
-                onTabSelected = onTab,
-            )
+            val vm: ExpensesViewModel = viewModel()
+            var pickingMonth by remember { mutableStateOf(false) }
+            LaunchedEffect(Unit) { vm.refresh() }
+            when (val state = vm.state) {
+                Load.Error -> ErrorScreen(onBack = vm::load, onRetry = vm::load, onTabSelected = onTab)
+                else -> ExpensesScreen(
+                    month = vm.month,
+                    // Enquanto carrega, mostra a tela sem itens (não há skeleton de Gastos no design).
+                    expenses = (state as? Load.Success)?.data?.expenses.orEmpty(),
+                    onMonthClick = { pickingMonth = true },
+                    onAddExpense = { nav.navigate(Routes.NEW_EXPENSE) },
+                    onTabSelected = onTab,
+                )
+            }
+            if (pickingMonth) {
+                MonthPickerDialog(
+                    selected = vm.month,
+                    onSelect = vm::selectMonth,
+                    onDismiss = { pickingMonth = false },
+                )
+            }
         }
 
         // ---- 12 Nova despesa ----
         composable(Routes.NEW_EXPENSE) {
-            var amount by rememberSaveable { mutableStateOf(DemoData.newExpenseAmount) }
-            var description by rememberSaveable { mutableStateOf(DemoData.NEW_EXPENSE_DESCRIPTION) }
-            val today = remember { LocalDate.now() }
+            val vm: NewExpenseViewModel = viewModel()
+            var pickingCategory by remember { mutableStateOf(false) }
+            var pickingDate by remember { mutableStateOf(false) }
             NewExpenseScreen(
-                amount = amount, onAmountChange = { amount = it },
-                description = description, onDescriptionChange = { description = it },
-                category = Category.Food,
-                onCategoryClick = { /* TODO: seletor de categoria aberto não existe no Figma */ },
-                date = today,
-                isToday = true,
-                onDateClick = { /* TODO: calendário aberto não existe no Figma */ },
+                amount = vm.amount, onAmountChange = vm::changeAmount,
+                description = vm.description, onDescriptionChange = vm::changeDescription,
+                category = vm.category,
+                onCategoryClick = { pickingCategory = true },
+                date = vm.date,
+                isToday = vm.date == LocalDate.now(),
+                onDateClick = { pickingDate = true },
+                errorMessage = vm.error,
                 onClose = { nav.popBackStack() },
                 onSave = {
-                    // TODO(back end): salvar a despesa antes de confirmar.
-                    // O modal de confirmação do Figma aparece sobre a Home: voltamos até
-                    // ela e abrimos o modal por cima.
-                    nav.popBackStack(Routes.HOME, inclusive = false)
-                    nav.navigate(Routes.CONFIRMATION)
+                    vm.save {
+                        // O modal de confirmação do Figma aparece sobre a Home: voltamos até
+                        // ela e abrimos o modal por cima. A Home e os Gastos se atualizam sozinhos.
+                        nav.popBackStack(Routes.HOME, inclusive = false)
+                        nav.navigate(Routes.CONFIRMATION)
+                    }
                 },
                 onCancel = { nav.popBackStack() },
             )
+            if (pickingCategory) {
+                CategoryPickerDialog(vm.category, vm::changeCategory) { pickingCategory = false }
+            }
+            if (pickingDate) {
+                ExpenseDatePickerDialog(vm.date, vm::changeDate) { pickingDate = false }
+            }
         }
 
         // ---- 13 Objetivos ----
@@ -400,18 +451,26 @@ fun SobraNavHost(modifier: Modifier = Modifier) {
 
         // ---- 19 Perfil ----
         composable(Routes.PROFILE) {
-            var notifications by rememberSaveable { mutableStateOf(true) }
+            val vm: ProfileViewModel = viewModel()
+            LaunchedEffect(Unit) { vm.refresh() }
+            val profile = (vm.state as? Load.Success)?.data
+            if (vm.state == Load.Error) {
+                ErrorScreen(onBack = vm::load, onRetry = vm::load, onTabSelected = onTab)
+                return@composable
+            }
             ProfileScreen(
-                initials = DemoData.USER_INITIALS,
-                name = DemoData.USER_FULL_NAME,
-                email = DemoData.USER_EMAIL,
-                notificationsEnabled = notifications,
-                onNotificationsChange = { notifications = it },
+                // Enquanto carrega, os campos ficam vazios (não há skeleton do Perfil no design).
+                initials = profile?.initials.orEmpty(),
+                name = profile?.name.orEmpty(),
+                email = profile?.email.orEmpty(),
+                notificationsEnabled = profile?.notificationsEnabled ?: true,
+                onNotificationsChange = vm::setNotifications,
                 onPersonalDataClick = { /* TODO: tela não existe no Figma */ },
                 onSecurityClick = { /* TODO: tela não existe no Figma */ },
                 onAboutClick = { /* TODO: tela não existe no Figma */ },
                 onTermsClick = { /* TODO: tela não existe no Figma */ },
                 onLogout = {
+                    setup.reset()
                     Graph.auth.logout()
                     nav.navigateClearingStack(Routes.LOGIN)
                 },

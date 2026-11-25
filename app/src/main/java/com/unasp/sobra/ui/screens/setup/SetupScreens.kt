@@ -12,6 +12,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import com.unasp.sobra.R
 import com.unasp.sobra.data.DemoData
+import com.unasp.sobra.ui.components.ErrorText
 import com.unasp.sobra.ui.components.AmountCard
 import com.unasp.sobra.ui.components.AuthHeader
 import com.unasp.sobra.ui.components.CategoryChip
@@ -41,6 +42,7 @@ fun IncomeScreen(
     onBack: () -> Unit,
     onContinue: () -> Unit,
     modifier: Modifier = Modifier,
+    errorMessage: String? = null,
 ) {
     FormScreen(
         modifier = modifier,
@@ -76,6 +78,7 @@ fun IncomeScreen(
             radius = Dimens.Radius20,
             modifier = Modifier.padding(horizontal = Dimens.ScreenMargin),
         )
+        ErrorText(errorMessage, Modifier.padding(horizontal = Dimens.ScreenMargin))
     }
 }
 
@@ -90,6 +93,7 @@ fun CategoriesScreen(
     onBack: () -> Unit,
     onFinish: () -> Unit,
     modifier: Modifier = Modifier,
+    errorMessage: String? = null,
 ) {
     FormScreen(
         modifier = modifier,
@@ -126,6 +130,7 @@ fun CategoriesScreen(
                 CategoryChip(budget, onClick = { onCategoryClick(budget.category) })
             }
         }
+        ErrorText(errorMessage, Modifier.padding(horizontal = Dimens.ScreenMargin))
     }
 }
 

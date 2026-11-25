@@ -21,6 +21,7 @@ import androidx.compose.ui.unit.dp
 import com.unasp.sobra.R
 import com.unasp.sobra.data.DemoData
 import com.unasp.sobra.domain.total
+import com.unasp.sobra.ui.components.ErrorText
 import com.unasp.sobra.ui.components.AmountCard
 import com.unasp.sobra.ui.components.BottomTab
 import com.unasp.sobra.ui.components.CircleIconButton
@@ -140,6 +141,7 @@ fun NewExpenseScreen(
     onSave: () -> Unit,
     onCancel: () -> Unit,
     modifier: Modifier = Modifier,
+    errorMessage: String? = null,
 ) {
     FormScreen(
         modifier = modifier,
@@ -204,6 +206,7 @@ fun NewExpenseScreen(
                 onClick = onDateClick,
                 leading = { SobraIcon(R.drawable.ic_calendar_16, tint = SobraColors.Teal) },
             )
+            ErrorText(errorMessage)
         }
     }
 }

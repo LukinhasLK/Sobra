@@ -225,4 +225,11 @@
     <string name="session_title">Sessão expirada</string>
     <string name="session_description">Por segurança, sua sessão foi encerrada. Faça login novamente para continuar.</string>
     <string name="session_button">Fazer login</string>
+
+    <!-- Etapa 2: seletores e diálogos (não existem no Figma; seguem o estilo dos cards) -->
+    <string name="picker_category_title">Categoria</string>
+    <string name="picker_month_title">Escolher mês</string>
+    <string name="picker_category_value_title">Valor estimado em %1$s</string>
+    <string name="picker_category_value_hint">Quanto você pretende gastar por mês.</string>
+    <string name="action_no_value">Sem valor</string>
 </resources>

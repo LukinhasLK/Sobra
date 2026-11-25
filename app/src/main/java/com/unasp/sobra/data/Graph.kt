@@ -16,6 +16,12 @@ object Graph {
         private set
     lateinit var home: HomeRepository
         private set
+    lateinit var setup: SetupRepository
+        private set
+    lateinit var expenses: ExpensesRepository
+        private set
+    lateinit var profile: ProfileRepository
+        private set
 
     fun init(context: Context) {
         if (this::api.isInitialized) return
@@ -23,5 +29,8 @@ object Graph {
         api = ApiClient(ApiConfig.BASE_URL, tokenProvider = { session.token }, onSessionExpired = { session.expire() })
         auth = AuthRepository(api, session)
         home = HomeRepository(api)
+        setup = SetupRepository(api)
+        expenses = ExpensesRepository(api)
+        profile = ProfileRepository(api)
     }
 }
