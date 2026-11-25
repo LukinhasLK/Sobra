@@ -33,7 +33,7 @@ private val CompactButtonHeight = 50.dp
 /** Botão principal: altura 54, raio 27, fundo Teal, texto branco 16/600. */
 @Composable
 fun PrimaryButton(text: String, onClick: () -> Unit, modifier: Modifier = Modifier) {
-    SobraButton(text, onClick, modifier, SobraColors.Teal, SobraColors.OnTeal)
+    SobraButton(text, onClick, modifier, SobraColors.TealDark, SobraColors.OnTeal)
 }
 
 /** Botão secundário: mesma geometria, fundo Soft, texto TextPrimary. */
@@ -55,7 +55,7 @@ fun CompactButton(
     height: Dp = CompactButtonHeight,
     radius: Dp = Dimens.Radius25,
 ) {
-    SobraButton(text, onClick, modifier, SobraColors.Teal, SobraColors.OnTeal, textStyle, height, radius)
+    SobraButton(text, onClick, modifier, SobraColors.TealDark, SobraColors.OnTeal, textStyle, height, radius)
 }
 
 @Composable

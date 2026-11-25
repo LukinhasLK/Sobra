@@ -261,4 +261,16 @@
     <string name="day_yesterday">Ontem</string>
     <string name="day_other">Outra data</string>
     <string name="action_saving">Salvando…</string>
+
+    <!-- Objetivos refinados -->
+    <string name="goals_total_saved">Total guardado</string>
+    <plurals name="goals_total_caption">
+        <item quantity="one">de %1$s em %2$d objetivo</item>
+        <item quantity="other">de %1$s em %2$d objetivos</item>
+    </plurals>
+    <string name="goal_remaining">Faltam %1$s</string>
+    <string name="goal_done">Meta atingida</string>
+    <string name="new_goal_end_month">Conclusão em %1$s</string>
+    <string name="contribution_type_monthly_hint">O aporte planejado</string>
+    <string name="contribution_type_extra_hint">Um valor a mais</string>
 </resources>

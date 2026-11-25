@@ -63,7 +63,7 @@ import kotlin.math.roundToInt
 
 // Layout refinado com referência no app Stoic (Mobbin): cards grandes e arredondados, o número
 // principal em destaque num card de cor cheia e um carrossel horizontal. As cores são só as da
-// paleta do Sobra: o preto do Stoic virou Teal.
+// paleta do Sobra: o preto do Stoic virou Teal (Teal escuro onde há texto, por contraste).
 
 private val AvatarSize = 40.dp
 private val NotificationButtonSize = 36.dp
@@ -265,7 +265,7 @@ private fun AvailableCard(income: BigDecimal, expenses: BigDecimal, available: B
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .sobraCard(Dimens.Radius24, background = SobraColors.Teal, borderColor = null)
+            .sobraCard(Dimens.Radius24, background = SobraColors.TealDark, borderColor = null)
             .padding(Dimens.Space24),
         verticalArrangement = Arrangement.spacedBy(Dimens.Space12),
     ) {
@@ -363,7 +363,7 @@ private fun GoalMiniCard(goal: Goal, onClick: () -> Unit) {
         )
         Column(verticalArrangement = Arrangement.spacedBy(Dimens.Space8)) {
             ProgressTrack(progress = progress, height = ProgressTrackHeight.Step)
-            Text(percentLabel(progress), style = GoalMiniPercent, color = SobraColors.Teal)
+            Text(percentLabel(progress), style = GoalMiniPercent, color = SobraColors.TealDark)
         }
     }
 }

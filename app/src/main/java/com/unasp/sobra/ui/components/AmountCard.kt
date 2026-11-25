@@ -55,7 +55,7 @@ fun AmountCard(
             MoneyTextField(
                 amount = amount,
                 onAmountChange = onAmountChange,
-                textStyle = valueStyle.copy(color = SobraColors.Teal),
+                textStyle = valueStyle.copy(color = SobraColors.TealDark),
                 modifier = Modifier
                     .alignByBaseline()
                     .weight(1f),

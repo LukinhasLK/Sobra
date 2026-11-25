@@ -154,7 +154,7 @@ fun RegisterScreen(
                         append(stringResource(R.string.register_have_account))
                     }
                     append(" ")
-                    withStyle(SpanStyle(color = SobraColors.Teal, fontWeight = FontWeight.W600)) {
+                    withStyle(SpanStyle(color = SobraColors.TealDark, fontWeight = FontWeight.W600)) {
                         append(stringResource(R.string.register_login_link))
                     }
                 }
@@ -254,7 +254,7 @@ fun RecoverPasswordScreen(
             FormError(errorMessage)
             // Confirmação do envio, em Teal (o design não define o estado pós-envio).
             if (infoMessage != null) {
-                Text(text = infoMessage, style = SobraType.FormLabel, color = SobraColors.Teal)
+                Text(text = infoMessage, style = SobraType.FormLabel, color = SobraColors.TealDark)
             }
         }
     }

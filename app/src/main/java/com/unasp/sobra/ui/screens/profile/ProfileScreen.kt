@@ -86,7 +86,7 @@ fun ProfileScreen(
                         .size(AvatarSize)
                         .figmaShadow(SobraColors.TealShadow, AvatarShadowBlur, AvatarShadowOffsetY, AvatarSize / 2)
                         .clip(CircleShape)
-                        .background(SobraColors.Teal),
+                        .background(SobraColors.TealDark), // fundo das iniciais (texto branco)
                     contentAlignment = Alignment.Center,
                 ) {
                     Text(initials, style = Initials, color = SobraColors.OnTeal)

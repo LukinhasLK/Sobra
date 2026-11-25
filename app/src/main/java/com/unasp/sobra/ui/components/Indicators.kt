@@ -101,7 +101,7 @@ fun Badge(
             .padding(horizontal = horizontalPadding, vertical = verticalPadding),
         contentAlignment = Alignment.Center,
     ) {
-        Text(text = text, style = textStyle, color = SobraColors.Teal, maxLines = 1)
+        Text(text = text, style = textStyle, color = SobraColors.TealDark, maxLines = 1)
     }
 }
 
@@ -201,7 +201,7 @@ fun ProgressRing(progress: Float, label: String, modifier: Modifier = Modifier) 
                 false, topLeft, arcSize, style = stroke,
             )
         }
-        Text(text = label, style = RingLabel, color = SobraColors.Teal)
+        Text(text = label, style = RingLabel, color = SobraColors.TealDark)
     }
 }
 
@@ -237,7 +237,7 @@ fun StepProgress(
         verticalArrangement = Arrangement.spacedBy(Dimens.Space8),
     ) {
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-            Text(text = stepLabel, style = StepLabel, color = SobraColors.Teal)
+            Text(text = stepLabel, style = StepLabel, color = SobraColors.TealDark)
             Text(text = caption, style = StepCaption, color = SobraColors.TextSecondary)
         }
         ProgressTrack(progress = progress, height = ProgressTrackHeight.Step)

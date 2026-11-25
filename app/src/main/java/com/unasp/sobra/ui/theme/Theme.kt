@@ -10,11 +10,11 @@ import androidx.compose.runtime.CompositionLocalProvider
 // As telas leem as cores direto de SobraColors. Este esquema só existe para que um
 // componente Material usado por engano apareça com a paleta do app, e não em roxo.
 private val SobraColorScheme = lightColorScheme(
-    primary = SobraColors.Teal,
+    primary = SobraColors.TealDark, // componentes Material (ex.: calendário) põem texto branco sobre a cor primária
     onPrimary = SobraColors.OnTeal,
     primaryContainer = SobraColors.TealLight,
-    onPrimaryContainer = SobraColors.Teal,
-    secondary = SobraColors.Teal,
+    onPrimaryContainer = SobraColors.TealDark,
+    secondary = SobraColors.TealDark,
     onSecondary = SobraColors.OnTeal,
     secondaryContainer = SobraColors.Soft,
     onSecondaryContainer = SobraColors.TextPrimary,

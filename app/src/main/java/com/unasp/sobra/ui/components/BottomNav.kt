@@ -87,7 +87,7 @@ fun BottomNav(
 
 @Composable
 private fun NavItem(tab: BottomTab, isSelected: Boolean, onClick: () -> Unit) {
-    val color = if (isSelected) SobraColors.Teal else SobraColors.TextSecondary
+    val color = if (isSelected) SobraColors.TealDark else SobraColors.TextSecondary
     Column(
         modifier = Modifier
             .size(width = ItemWidth, height = ItemHeight)

@@ -1,15 +1,12 @@
 package com.unasp.sobra.ui.components
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.ui.unit.dp
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -24,14 +21,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.window.Dialog
 import com.unasp.sobra.R
 import com.unasp.sobra.data.ContributionType
-import com.unasp.sobra.ui.format.toFullDate
 import com.unasp.sobra.ui.model.Category
 import com.unasp.sobra.ui.theme.Dimens
 import com.unasp.sobra.ui.theme.SobraColors
@@ -42,12 +37,11 @@ import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneOffset
 
-// Seletores abertos pelos campos de Categorias (valor), Novo objetivo (prazo), novo aporte e data. O Figma só desenha os
+// Diálogos: valor da categoria (configuração), novo aporte e calendário ("Outra data"). O Figma só desenha os
 // campos fechados, então estes diálogos reaproveitam o estilo dos cards (raio, borda, cores).
 
 private val DialogTitle = manrope(18, FontWeight.W700)
 private val DialogText = manrope(14, FontWeight.W400)
-private val OptionText = manrope(15, FontWeight.W600)
 
 /** Moldura comum dos diálogos: card branco centralizado com título. */
 @Composable
@@ -64,23 +58,6 @@ private fun PickerDialog(title: String, onDismiss: () -> Unit, content: @Composa
             content()
         }
     }
-}
-
-/** Uma opção da lista; a escolhida fica em Teal. */
-@Composable
-private fun OptionRow(selected: Boolean, onClick: () -> Unit, content: @Composable () -> Unit) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .sobraCard(
-                Dimens.Radius16,
-                background = if (selected) SobraColors.TealLight else SobraColors.Surface,
-            )
-            .clickable(role = Role.Button, onClick = onClick)
-            .padding(horizontal = Dimens.Space16, vertical = Dimens.Space12),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(Dimens.Space12),
-    ) { content() }
 }
 
 /** Valor estimado de uma categoria (passo 2 da configuração). Valor zero = categoria inativa. */
@@ -150,30 +127,6 @@ fun ExpenseDatePickerDialog(selected: LocalDate, onSelect: (LocalDate) -> Unit, 
     }
 }
 
-/** Prazos oferecidos ao criar um objetivo (a API aceita de 1 a 360 meses). */
-private val GOAL_TERMS = listOf(3, 6, 9, 12, 18, 24, 30, 36, 48, 60)
-
-/** Escolha do prazo do objetivo, em meses. */
-@Composable
-fun GoalTermPickerDialog(selected: Int, onSelect: (Int) -> Unit, onDismiss: () -> Unit) {
-    PickerDialog(stringResource(R.string.picker_term_title), onDismiss) {
-        LazyColumn(
-            modifier = Modifier.heightIn(max = ListMaxHeight),
-            verticalArrangement = Arrangement.spacedBy(Dimens.Space8),
-        ) {
-            items(GOAL_TERMS, key = { it }) { months ->
-                OptionRow(selected = months == selected, onClick = { onSelect(months); onDismiss() }) {
-                    Text(
-                        pluralStringResource(R.plurals.months_count, months, months),
-                        style = OptionText,
-                        color = SobraColors.TextPrimary,
-                    )
-                }
-            }
-        }
-    }
-}
-
 /**
  * Novo aporte de um objetivo (OP-16): valor, tipo (mensal ou extra) e data.
  * O diálogo só fecha quando a API aceita; se recusar, [errorMessage] aparece aqui dentro.
@@ -202,28 +155,18 @@ fun AddContributionDialog(
             prefixGap = Dimens.Space8,
             radius = Dimens.Radius20,
         )
-        Row(horizontalArrangement = Arrangement.spacedBy(Dimens.Space8)) {
+        // Tipo em dois cartões grandes (referência: cartões de escolha do Stoic).
+        Row(horizontalArrangement = Arrangement.spacedBy(Dimens.Space12)) {
             ContributionType.entries.forEach { option ->
-                Box(modifier = Modifier.weight(1f)) {
-                    OptionRow(selected = option == type, onClick = { type = option }) {
-                        Text(
-                            stringResource(
-                                if (option == ContributionType.Monthly) R.string.contribution_type_monthly
-                                else R.string.contribution_type_extra,
-                            ),
-                            style = OptionText,
-                            color = SobraColors.TextPrimary,
-                        )
-                    }
-                }
+                TypeTile(
+                    type = option,
+                    selected = option == type,
+                    onClick = { type = option },
+                    modifier = Modifier.weight(1f),
+                )
             }
         }
-        WhiteSelectorField(
-            label = stringResource(R.string.field_date),
-            text = date.toFullDate(),
-            onClick = { pickingDate = true },
-            leading = { SobraIcon(R.drawable.ic_calendar_16, tint = SobraColors.Teal) },
-        )
+        DateChips(date, onDateSelected = { date = it }, onPickOtherDate = { pickingDate = true })
         ErrorText(errorMessage)
         Column(verticalArrangement = Arrangement.spacedBy(Dimens.Space12)) {
             PrimaryButton(stringResource(R.string.action_save), { if (!saving) onConfirm(type, amount, date) })
@@ -235,6 +178,41 @@ fun AddContributionDialog(
     }
 }
 
+private val TileHeight = 88.dp
+private val TileTitle = manrope(15, FontWeight.W700)
+private val TileHint = manrope(12, FontWeight.W500)
+
+/** Cartão de escolha do tipo de aporte: selecionado em Teal escuro com texto branco. */
+@Composable
+private fun TypeTile(type: ContributionType, selected: Boolean, onClick: () -> Unit, modifier: Modifier = Modifier) {
+    val monthly = type == ContributionType.Monthly
+    Column(
+        modifier = modifier
+            .height(TileHeight)
+            .sobraCard(
+                Dimens.Radius20,
+                background = if (selected) SobraColors.TealDark else SobraColors.Surface,
+                borderColor = if (selected) null else SobraColors.Border,
+            )
+            .selectable(selected = selected, role = Role.RadioButton, onClick = onClick)
+            .padding(Dimens.Space12),
+        verticalArrangement = Arrangement.spacedBy(Dimens.Space4, Alignment.CenterVertically),
+    ) {
+        SobraIcon(
+            if (monthly) R.drawable.ic_calendar_16 else R.drawable.ic_plus_18,
+            tint = if (selected) SobraColors.OnTeal else SobraColors.Teal,
+        )
+        Text(
+            stringResource(if (monthly) R.string.contribution_type_monthly else R.string.contribution_type_extra),
+            style = TileTitle, color = if (selected) SobraColors.OnTeal else SobraColors.TextPrimary,
+        )
+        Text(
+            stringResource(if (monthly) R.string.contribution_type_monthly_hint else R.string.contribution_type_extra_hint),
+            style = TileHint, color = if (selected) SobraColors.TealLight else SobraColors.TextSecondary,
+        )
+    }
+}
+
 /** Mensagem de erro de formulário em vermelho; não ocupa espaço quando é null. */
 @Composable
 fun ErrorText(message: String?, modifier: Modifier = Modifier) {
@@ -243,5 +221,4 @@ fun ErrorText(message: String?, modifier: Modifier = Modifier) {
     }
 }
 
-private val ListMaxHeight = Dimens.ListBottomReserve * 3
 private const val MIN_YEAR = 2000

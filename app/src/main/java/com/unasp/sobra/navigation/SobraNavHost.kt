@@ -25,7 +25,6 @@ import com.unasp.sobra.data.Graph
 import com.unasp.sobra.ui.components.BottomTab
 import com.unasp.sobra.ui.components.AddContributionDialog
 import com.unasp.sobra.ui.components.CategoryAmountDialog
-import com.unasp.sobra.ui.components.GoalTermPickerDialog
 import com.unasp.sobra.ui.components.LoadingScreen
 import com.unasp.sobra.ui.components.ExpenseDatePickerDialog
 import com.unasp.sobra.ui.model.Category
@@ -378,21 +377,17 @@ fun SobraNavHost(modifier: Modifier = Modifier) {
         // ---- 14 Novo objetivo ----
         composable(Routes.NEW_GOAL) {
             val vm: NewGoalViewModel = viewModel()
-            var pickingTerm by remember { mutableStateOf(false) }
             val startMonth = remember { YearMonth.now() }
             NewGoalScreen(
                 name = vm.name, onNameChange = vm::changeName,
                 target = vm.target, onTargetChange = vm::changeTarget,
-                months = vm.months,
+                months = vm.months, onMonthsChange = vm::changeMonths,
                 startMonth = startMonth,
-                onDeadlineClick = { pickingTerm = true },
                 errorMessage = vm.error,
+                saving = vm.loading,
                 onBack = { nav.popBackStack() },
                 onCreate = { vm.create { nav.popBackStack() } }, // a lista se atualiza ao reaparecer
             )
-            if (pickingTerm) {
-                GoalTermPickerDialog(vm.months, vm::changeMonths) { pickingTerm = false }
-            }
         }
 
         // ---- 15 Detalhe do objetivo ----
@@ -412,7 +407,7 @@ fun SobraNavHost(modifier: Modifier = Modifier) {
                     forecast = state.data.forecast,
                     contributions = state.data.contributions,
                     onBack = { nav.popBackStack() },
-                    onEdit = { /* TODO: editar objetivo não existe no Figma nem na API (só criar e listar) */ },
+                    // Sem onEdit: editar objetivo não existe no Figma nem na API (só criar e listar).
                     onAddContribution = { vm.clearError(); adding = true },
                 )
             }

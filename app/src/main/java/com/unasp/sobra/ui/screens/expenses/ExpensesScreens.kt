@@ -1,11 +1,8 @@
 package com.unasp.sobra.ui.screens.expenses
 
-import androidx.annotation.DrawableRes
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -39,6 +36,9 @@ import com.unasp.sobra.data.DemoData
 import com.unasp.sobra.domain.total
 import com.unasp.sobra.ui.components.AmountCard
 import com.unasp.sobra.ui.components.BottomTab
+import com.unasp.sobra.ui.components.ChipGroup
+import com.unasp.sobra.ui.components.DateChips
+import com.unasp.sobra.ui.components.SelectChip
 import com.unasp.sobra.ui.components.CircleIconButton
 import com.unasp.sobra.ui.components.ErrorText
 import com.unasp.sobra.ui.components.ExpenseRow
@@ -47,7 +47,6 @@ import com.unasp.sobra.ui.components.FooterActions
 import com.unasp.sobra.ui.components.FormScreen
 import com.unasp.sobra.ui.components.PrimaryButton
 import com.unasp.sobra.ui.components.SecondaryButton
-import com.unasp.sobra.ui.components.SobraIcon
 import com.unasp.sobra.ui.components.SobraScreen
 import com.unasp.sobra.ui.components.TextLink
 import com.unasp.sobra.ui.components.TitleHeader
@@ -55,7 +54,6 @@ import com.unasp.sobra.ui.components.WhiteTextField
 import com.unasp.sobra.ui.components.sobraCard
 import com.unasp.sobra.ui.format.toBrl
 import com.unasp.sobra.ui.format.toDayMonthLong
-import com.unasp.sobra.ui.format.toFullDate
 import com.unasp.sobra.ui.format.toMonthYear
 import com.unasp.sobra.ui.format.toShortMonth
 import com.unasp.sobra.ui.model.Category
@@ -63,7 +61,6 @@ import com.unasp.sobra.ui.model.Expense
 import com.unasp.sobra.ui.theme.Dimens
 import com.unasp.sobra.ui.theme.SobraColors
 import com.unasp.sobra.ui.theme.SobraTheme
-import com.unasp.sobra.ui.theme.SobraType
 import com.unasp.sobra.ui.theme.manrope
 import java.math.BigDecimal
 import java.time.LocalDate
@@ -85,13 +82,11 @@ private val AmountPrefix = manrope(24, FontWeight.W700)
 private val AmountValue = manrope(36, FontWeight.W800)
 private val MonthLabel = manrope(15, FontWeight.W700)
 private val YearLabel = manrope(11, FontWeight.W500)
-private val ChipText = manrope(14, FontWeight.W600)
 
 // O fechar tem 26 de desenho (Figma), mas a área de toque precisa de 48 (acessibilidade).
 private val CloseButtonSize = 26.dp
 private val MonthPillWidth = 64.dp
 private val MonthPillHeight = 56.dp
-private val ChipHeight = 44.dp
 private val LoadingTopPadding = 48.dp
 
 /** Meses na fileira: o atual e os 11 anteriores (a API guarda tudo; 12 cobre o uso diário). */
@@ -138,7 +133,7 @@ fun ExpensesScreen(
             modifier = Modifier
                 .padding(start = Dimens.ScreenMargin, end = Dimens.ScreenMargin, top = Dimens.Space16, bottom = Dimens.Space8)
                 .fillMaxWidth()
-                .sobraCard(Dimens.Radius20, background = SobraColors.Teal, borderColor = null)
+                .sobraCard(Dimens.Radius20, background = SobraColors.TealDark, borderColor = null)
                 .padding(Dimens.Space20),
             verticalArrangement = Arrangement.spacedBy(Dimens.Space4),
         ) {
@@ -194,7 +189,7 @@ private fun MonthStrip(selected: YearMonth, onSelect: (YearMonth) -> Unit) {
                     .height(MonthPillHeight)
                     .sobraCard(
                         Dimens.Radius20,
-                        background = if (isSelected) SobraColors.Teal else SobraColors.Surface,
+                        background = if (isSelected) SobraColors.TealDark else SobraColors.Surface,
                         borderColor = if (isSelected) null else SobraColors.Border,
                     )
                     // selectable informa "selecionado" ao leitor de tela.
@@ -294,8 +289,6 @@ fun NewExpenseScreen(
     errorMessage: String? = null,
     saving: Boolean = false,
 ) {
-    val today = remember { LocalDate.now() }
-    val yesterday = today.minusDays(1)
     FormScreen(
         modifier = modifier,
         footer = {
@@ -367,59 +360,9 @@ fun NewExpenseScreen(
                 }
             }
 
-            // Data: "Hoje" e "Ontem" cobrem quase todos os lançamentos; "Outra data" abre o calendário
-            // e, depois de escolhida, mostra a própria data no chip.
-            val isOther = date != today && date != yesterday
-            ChipGroup(label = stringResource(R.string.field_date)) {
-                SelectChip(stringResource(R.string.day_today), date == today, { onDateSelected(today) })
-                SelectChip(stringResource(R.string.day_yesterday), date == yesterday, { onDateSelected(yesterday) })
-                SelectChip(
-                    text = if (isOther) date.toFullDate() else stringResource(R.string.day_other),
-                    selected = isOther,
-                    onClick = onPickOtherDate,
-                    icon = R.drawable.ic_calendar_16,
-                )
-            }
+            DateChips(date, onDateSelected, onPickOtherDate)
             ErrorText(errorMessage)
         }
-    }
-}
-
-/** Label do formulário + chips que quebram linha quando não cabem. */
-@OptIn(ExperimentalLayoutApi::class)
-@Composable
-private fun ChipGroup(label: String, content: @Composable () -> Unit) {
-    Column(verticalArrangement = Arrangement.spacedBy(Dimens.Space8)) {
-        Text(text = label, style = SobraType.FormLabel, color = SobraColors.TextSecondary)
-        FlowRow(
-            horizontalArrangement = Arrangement.spacedBy(Dimens.Space8),
-            verticalArrangement = Arrangement.spacedBy(Dimens.Space8),
-        ) { content() }
-    }
-}
-
-/**
- * Chip de escolha única (referência: chips do Stoic). Selecionado: Teal cheio e texto branco;
- * não selecionado: branco com borda. Altura 44 e borda arredondada por inteiro.
- */
-@Composable
-private fun SelectChip(text: String, selected: Boolean, onClick: () -> Unit, @DrawableRes icon: Int? = null) {
-    val content = if (selected) SobraColors.OnTeal else SobraColors.TextPrimary
-    Row(
-        modifier = Modifier
-            .height(ChipHeight)
-            .sobraCard(
-                Dimens.RadiusFull,
-                background = if (selected) SobraColors.Teal else SobraColors.Surface,
-                borderColor = if (selected) null else SobraColors.Border,
-            )
-            .selectable(selected = selected, role = Role.RadioButton, onClick = onClick)
-            .padding(horizontal = Dimens.Space16),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(Dimens.Space8),
-    ) {
-        if (icon != null) SobraIcon(icon, tint = if (selected) SobraColors.OnTeal else SobraColors.Teal)
-        Text(text, style = ChipText, color = content, maxLines = 1)
     }
 }
 

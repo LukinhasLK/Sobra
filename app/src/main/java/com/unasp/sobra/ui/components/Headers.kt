@@ -42,7 +42,7 @@ fun TextLink(
     text: String,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
-    color: Color = SobraColors.Teal,
+    color: Color = SobraColors.TealDark,
     textAlign: TextAlign? = null,
 ) {
     Text(
@@ -63,7 +63,7 @@ fun BackLink(text: String, onClick: () -> Unit, modifier: Modifier = Modifier) {
         horizontalArrangement = Arrangement.spacedBy(Dimens.Space6),
     ) {
         SobraIcon(R.drawable.ic_arrow_left_16, tint = SobraColors.Teal)
-        Text(text = text, style = LinkText, color = SobraColors.Teal)
+        Text(text = text, style = LinkText, color = SobraColors.TealDark)
     }
 }
 

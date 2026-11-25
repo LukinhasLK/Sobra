@@ -160,7 +160,7 @@ fun ContributionRow(contribution: Contribution, modifier: Modifier = Modifier) {
             Text(contribution.title, style = ContributionTitle, color = SobraColors.TextPrimary)
             Text(contribution.date.toFullDate(), style = ContributionDate, color = SobraColors.TextSecondary)
         }
-        Text(contribution.amount.toBrlPositive(), style = ContributionValue, color = SobraColors.Teal)
+        Text(contribution.amount.toBrlPositive(), style = ContributionValue, color = SobraColors.TealDark)
     }
 }
 
@@ -217,6 +217,14 @@ fun GoalCard(goal: Goal, onClick: () -> Unit, modifier: Modifier = Modifier) {
             Badge(percentLabel(progress), GoalBadge, horizontalPadding = Dimens.Space8, verticalPadding = Dimens.Space4)
         }
         ProgressTrack(progress = progress, height = ProgressTrackHeight.Goal)
+        // Quanto falta: a pergunta que a pessoa faz ao olhar a lista.
+        val remaining = goal.target - goal.current
+        Text(
+            if (remaining.signum() <= 0) stringResource(R.string.goal_done)
+            else stringResource(R.string.goal_remaining, remaining.toBrlShort()),
+            style = GoalValues,
+            color = if (remaining.signum() <= 0) SobraColors.TealDark else SobraColors.TextSecondary,
+        )
     }
 }
 
@@ -236,6 +244,7 @@ private val ChipSubtitle = manrope(11, FontWeight.W400)
 fun CategoryChip(budget: CategoryBudget, onClick: () -> Unit, modifier: Modifier = Modifier) {
     val active = budget.amount != null
     val accent = if (active) SobraColors.Teal else SobraColors.TextSecondary
+    val accentText = if (active) SobraColors.TealDark else SobraColors.TextSecondary // texto: Teal escuro (contraste)
     Row(
         modifier = modifier
             .height(ChipHeight)
@@ -254,13 +263,13 @@ fun CategoryChip(budget: CategoryBudget, onClick: () -> Unit, modifier: Modifier
             Text(
                 stringResource(budget.category.label),
                 style = ChipTitle,
-                color = if (active) SobraColors.Teal else SobraColors.TextPrimary,
+                color = if (active) SobraColors.TealDark else SobraColors.TextPrimary,
             )
             Text(
                 // `?.` só chama toBrlShort() se amount não for nulo; `?:` dá o texto alternativo.
                 budget.amount?.toBrlShort() ?: stringResource(R.string.category_add),
                 style = ChipSubtitle,
-                color = accent,
+                color = accentText,
             )
         }
     }

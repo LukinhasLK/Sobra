@@ -147,7 +147,7 @@ private fun TermControl(months: Int, onMonthsChange: (Int) -> Unit) {
     Column(verticalArrangement = Arrangement.spacedBy(Dimens.Space12)) {
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
             Text(stringResource(R.string.simulate_term), style = TermLabel, color = SobraColors.TextSecondary)
-            Text(pluralStringResource(R.plurals.months_count, months, months), style = TermValue, color = SobraColors.Teal)
+            Text(pluralStringResource(R.plurals.months_count, months, months), style = TermValue, color = SobraColors.TealDark)
         }
         // O Figma não desenha "thumb" (bolinha): a própria trilha responde a toque e arrasto.
         ProgressTrack(
@@ -233,7 +233,7 @@ fun SimulationResultScreen(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .sobraCard(Dimens.Radius20, background = SobraColors.Teal, borderColor = null)
+                    .sobraCard(Dimens.Radius20, background = SobraColors.TealDark, borderColor = null)
                     .padding(Dimens.Space20),
                 horizontalArrangement = Arrangement.SpaceBetween,
             ) {
@@ -446,7 +446,7 @@ private fun SavedSimulationCard(simulation: SavedSimulation) {
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Text(stringResource(R.string.saved_result), style = SavedResultLabel, color = SobraColors.TextSecondary)
-            Text(simulation.result.toBrl(), style = SavedResultValue, color = SobraColors.Teal)
+            Text(simulation.result.toBrl(), style = SavedResultValue, color = SobraColors.TealDark)
         }
     }
 }

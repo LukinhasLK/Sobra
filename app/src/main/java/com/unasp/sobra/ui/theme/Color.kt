@@ -15,6 +15,10 @@ object SobraColors {
     val TextPrimary = Color(0xFF1C1917)   // texto principal
     val TextSecondary = Color(0xFF78716C) // labels, placeholders, ícones inativos
     val Teal = Color(0xFF0D9488)          // marca, CTA, seleção, progresso
+    // Teal escuro: SÓ onde há texto (texto em Teal, ou texto branco sobre fundo Teal).
+    // O Teal normal com texto branco tem contraste 3,74 (abaixo do mínimo 4,5 da WCAG AA);
+    // este tem 5,47. Ícones, barras, anéis, FAB e a Splash continuam no Teal normal.
+    val TealDark = Color(0xFF0F766E)
     val TealLight = Color(0xFFCCFBF1)     // destaques, chips ativos, badges
     val Soft = Color(0xFFF2EFEA)          // campos suaves, trilhas, botão secundário
     val Border = Color(0xFFE7E5E4)        // bordas, divisórias
