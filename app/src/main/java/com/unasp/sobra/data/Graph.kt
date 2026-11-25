@@ -22,6 +22,10 @@ object Graph {
         private set
     lateinit var profile: ProfileRepository
         private set
+    lateinit var goals: GoalsRepository
+        private set
+    lateinit var simulation: SimulationRepository
+        private set
 
     fun init(context: Context) {
         if (this::api.isInitialized) return
@@ -32,5 +36,7 @@ object Graph {
         setup = SetupRepository(api)
         expenses = ExpensesRepository(api)
         profile = ProfileRepository(api)
+        goals = GoalsRepository(api)
+        simulation = SimulationRepository(api)
     }
 }

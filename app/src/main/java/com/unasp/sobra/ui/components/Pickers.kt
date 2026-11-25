@@ -2,6 +2,7 @@ package com.unasp.sobra.ui.components
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -23,12 +24,15 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.window.Dialog
 import com.unasp.sobra.R
 import com.unasp.sobra.data.CATEGORY_ORDER
+import com.unasp.sobra.data.ContributionType
+import com.unasp.sobra.ui.format.toFullDate
 import com.unasp.sobra.ui.format.toMonthYear
 import com.unasp.sobra.ui.model.Category
 import com.unasp.sobra.ui.theme.Dimens
@@ -187,6 +191,91 @@ fun ExpenseDatePickerDialog(selected: LocalDate, onSelect: (LocalDate) -> Unit, 
         dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_cancel)) } },
     ) {
         DatePicker(state = state)
+    }
+}
+
+/** Prazos oferecidos ao criar um objetivo (a API aceita de 1 a 360 meses). */
+private val GOAL_TERMS = listOf(3, 6, 9, 12, 18, 24, 30, 36, 48, 60)
+
+/** Escolha do prazo do objetivo, em meses. */
+@Composable
+fun GoalTermPickerDialog(selected: Int, onSelect: (Int) -> Unit, onDismiss: () -> Unit) {
+    PickerDialog(stringResource(R.string.picker_term_title), onDismiss) {
+        LazyColumn(
+            modifier = Modifier.heightIn(max = ListMaxHeight),
+            verticalArrangement = Arrangement.spacedBy(Dimens.Space8),
+        ) {
+            items(GOAL_TERMS, key = { it }) { months ->
+                OptionRow(selected = months == selected, onClick = { onSelect(months); onDismiss() }) {
+                    Text(
+                        pluralStringResource(R.plurals.months_count, months, months),
+                        style = OptionText,
+                        color = SobraColors.TextPrimary,
+                    )
+                }
+            }
+        }
+    }
+}
+
+/**
+ * Novo aporte de um objetivo (OP-16): valor, tipo (mensal ou extra) e data.
+ * O diálogo só fecha quando a API aceita; se recusar, [errorMessage] aparece aqui dentro.
+ */
+@Composable
+fun AddContributionDialog(
+    errorMessage: String?,
+    saving: Boolean,
+    onConfirm: (ContributionType, BigDecimal, LocalDate) -> Unit,
+    onDismiss: () -> Unit,
+) {
+    var amount by remember { mutableStateOf(BigDecimal.ZERO.setScale(2)) }
+    var type by remember { mutableStateOf(ContributionType.Monthly) }
+    var date by remember { mutableStateOf(LocalDate.now()) }
+    var pickingDate by remember { mutableStateOf(false) }
+
+    PickerDialog(stringResource(R.string.contribution_title), onDismiss) {
+        AmountCard(
+            label = stringResource(R.string.contribution_amount_label),
+            amount = amount,
+            onAmountChange = { amount = it },
+            prefixStyle = manrope(20, FontWeight.W700),
+            valueStyle = manrope(28, FontWeight.W800),
+            padding = Dimens.Space16,
+            labelGap = Dimens.Space8,
+            prefixGap = Dimens.Space8,
+            radius = Dimens.Radius20,
+        )
+        Row(horizontalArrangement = Arrangement.spacedBy(Dimens.Space8)) {
+            ContributionType.entries.forEach { option ->
+                Box(modifier = Modifier.weight(1f)) {
+                    OptionRow(selected = option == type, onClick = { type = option }) {
+                        Text(
+                            stringResource(
+                                if (option == ContributionType.Monthly) R.string.contribution_type_monthly
+                                else R.string.contribution_type_extra,
+                            ),
+                            style = OptionText,
+                            color = SobraColors.TextPrimary,
+                        )
+                    }
+                }
+            }
+        }
+        WhiteSelectorField(
+            label = stringResource(R.string.field_date),
+            text = date.toFullDate(),
+            onClick = { pickingDate = true },
+            leading = { SobraIcon(R.drawable.ic_calendar_16, tint = SobraColors.Teal) },
+        )
+        ErrorText(errorMessage)
+        Column(verticalArrangement = Arrangement.spacedBy(Dimens.Space12)) {
+            PrimaryButton(stringResource(R.string.action_save), { if (!saving) onConfirm(type, amount, date) })
+            SecondaryButton(stringResource(R.string.action_cancel), onDismiss)
+        }
+    }
+    if (pickingDate) {
+        ExpenseDatePickerDialog(date, onSelect = { date = it }, onDismiss = { pickingDate = false })
     }
 }
 

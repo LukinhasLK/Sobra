@@ -44,6 +44,7 @@ import com.unasp.sobra.ui.components.TitleHeader
 import com.unasp.sobra.ui.components.WhiteMoneyField
 import com.unasp.sobra.ui.components.WhiteSelectorField
 import com.unasp.sobra.ui.components.WhiteTextField
+import com.unasp.sobra.ui.components.ErrorText
 import com.unasp.sobra.ui.components.percentLabel
 import com.unasp.sobra.ui.components.sobraCard
 import com.unasp.sobra.ui.format.toBrl
@@ -141,6 +142,7 @@ fun NewGoalScreen(
     onBack: () -> Unit,
     onCreate: () -> Unit,
     modifier: Modifier = Modifier,
+    errorMessage: String? = null,
 ) {
     val suggestion = suggestedMonthlyContribution(target, months)
     FormScreen(
@@ -197,6 +199,7 @@ fun NewGoalScreen(
                 // TODO: a cor do texto de explicação não foi informada no Figma (usando TextSecondary).
                 Text(stringResource(R.string.new_goal_suggestion_hint), style = SuggestionHint, color = SobraColors.TextSecondary)
             }
+            ErrorText(errorMessage)
         }
     }
 }
@@ -216,7 +219,7 @@ private val HistoryTitle = manrope(15, FontWeight.W700)
 fun GoalDetailScreen(
     goal: Goal,
     monthlyContribution: BigDecimal,
-    forecast: YearMonth,
+    forecast: YearMonth?,
     contributions: List<Contribution>,
     onBack: () -> Unit,
     onEdit: () -> Unit,
@@ -277,7 +280,12 @@ fun GoalDetailScreen(
                         verticalArrangement = Arrangement.spacedBy(Dimens.Space12),
                     ) {
                         InfoLine(stringResource(R.string.goal_detail_monthly), monthlyContribution.toBrl(), SobraColors.TextPrimary)
-                        InfoLine(stringResource(R.string.goal_detail_forecast), forecast.toMonthYear(), SobraColors.Teal)
+                        InfoLine(
+                            stringResource(R.string.goal_detail_forecast),
+                            // Sem previsão (objetivo concluído ou sem aporte planejado) a API devolve nulo.
+                            forecast?.toMonthYear() ?: stringResource(R.string.goal_detail_forecast_none),
+                            SobraColors.Teal,
+                        )
                     }
                 }
                 item {

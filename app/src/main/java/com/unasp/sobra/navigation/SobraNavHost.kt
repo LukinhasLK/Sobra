@@ -6,7 +6,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -22,12 +21,12 @@ import androidx.navigation.compose.dialog
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.unasp.sobra.R
-import com.unasp.sobra.data.DemoData
 import com.unasp.sobra.data.Graph
-import com.unasp.sobra.domain.SimulationResult
-import com.unasp.sobra.domain.simulate
 import com.unasp.sobra.ui.components.BottomTab
+import com.unasp.sobra.ui.components.AddContributionDialog
 import com.unasp.sobra.ui.components.CategoryAmountDialog
+import com.unasp.sobra.ui.components.GoalTermPickerDialog
+import com.unasp.sobra.ui.components.LoadingScreen
 import com.unasp.sobra.ui.components.CategoryPickerDialog
 import com.unasp.sobra.ui.components.ExpenseDatePickerDialog
 import com.unasp.sobra.ui.components.MonthPickerDialog
@@ -57,6 +56,11 @@ import com.unasp.sobra.ui.screens.states.HomeSkeletonScreen
 import com.unasp.sobra.ui.screens.states.SessionExpiredScreen
 import com.unasp.sobra.ui.viewmodel.AuthViewModel
 import com.unasp.sobra.ui.viewmodel.ExpensesViewModel
+import com.unasp.sobra.ui.viewmodel.GoalDetailViewModel
+import com.unasp.sobra.ui.viewmodel.GoalsViewModel
+import com.unasp.sobra.ui.viewmodel.NewGoalViewModel
+import com.unasp.sobra.ui.viewmodel.SavedSimulationsViewModel
+import com.unasp.sobra.ui.viewmodel.SimulationViewModel
 import com.unasp.sobra.ui.viewmodel.Load
 import com.unasp.sobra.ui.viewmodel.NewExpenseViewModel
 import com.unasp.sobra.ui.viewmodel.ProfileViewModel
@@ -139,17 +143,16 @@ private fun NavHostController.navigateClearingStack(route: String) {
  * Grafo de navegação do app.
  *
  * As telas são "sem estado": cada bloco `composable(...)` abaixo guarda o estado mínimo
- * da tela com `remember` ou ViewModel. Login, cadastro, configuração, Home, Gastos e Perfil
- * já usam a API; Objetivos e Simular ainda usam DemoData.
- * TODO(back end): trocar o DemoData restante por ViewModels ligados aos repositórios.
+ * da tela com `remember` ou ViewModel. Todas as telas com dados já usam a API; o DemoData
+ * ficou só para os @Preview.
  */
 @Composable
 fun SobraNavHost(modifier: Modifier = Modifier) {
     val nav = rememberNavController()
     val onTab: (BottomTab) -> Unit = { nav.navigateToTab(it) }
 
-    // Último resultado calculado em "Simular", lido pela tela de resultado.
-    var simulationResult by remember { mutableStateOf<SimulationResult?>(null) }
+    // Simular (telas 16 e 17): entradas e resultado compartilhados; sobrevive à rotação da tela.
+    val simulation: SimulationViewModel = viewModel()
 
     // Renda e categorias da configuração inicial: um só estado para os dois passos.
     val setup: SetupViewModel = viewModel()
@@ -243,11 +246,14 @@ fun SobraNavHost(modifier: Modifier = Modifier) {
         // ---- 07 Recuperar senha ----
         composable(Routes.RECOVER_PASSWORD) {
             var email by rememberSaveable { mutableStateOf("") }
+            val auth: AuthViewModel = viewModel()
             RecoverPasswordScreen(
                 email = email, onEmailChange = { email = it },
+                errorMessage = auth.error,
+                infoMessage = auth.info,
                 onBack = { nav.popBackStack() },
-                // TODO(back end): enviar o e-mail de recuperação. O estado pós-envio não existe no Figma.
-                onSend = { nav.popBackStack() },
+                // O estado pós-envio não existe no Figma: a confirmação aparece abaixo do campo.
+                onSend = { auth.requestPasswordReset(email) },
                 onBackToLogin = { nav.popBackStack() },
             )
         }
@@ -365,88 +371,115 @@ fun SobraNavHost(modifier: Modifier = Modifier) {
             }
         }
 
-        // ---- 13 Objetivos ----
+        // ---- 13 Objetivos (e 20 Estado vazio, quando a lista vem vazia) ----
         composable(Routes.GOALS) {
-            // Com a lista vazia, a própria GoalsScreen mostra o estado vazio (tela 20).
-            GoalsScreen(
-                goals = DemoData.goals,
-                onGoalClick = { nav.navigate(Routes.goalDetail(it.id)) },
-                onAddGoal = { nav.navigate(Routes.NEW_GOAL) },
-                onTabSelected = onTab,
-            )
+            val vm: GoalsViewModel = viewModel()
+            LaunchedEffect(Unit) { vm.refresh() }
+            when (val state = vm.state) {
+                Load.Loading -> LoadingScreen(BottomTab.Goals, onTab)
+                Load.Error -> ErrorScreen(onBack = vm::load, onRetry = vm::load, onTabSelected = onTab)
+                is Load.Success -> GoalsScreen(
+                    goals = state.data,
+                    onGoalClick = { nav.navigate(Routes.goalDetail(it.id)) },
+                    onAddGoal = { nav.navigate(Routes.NEW_GOAL) },
+                    onTabSelected = onTab,
+                )
+            }
         }
 
         // ---- 14 Novo objetivo ----
         composable(Routes.NEW_GOAL) {
-            var name by rememberSaveable { mutableStateOf(DemoData.NEW_GOAL_NAME) }
-            var target by rememberSaveable { mutableStateOf(DemoData.newGoalTarget) }
+            val vm: NewGoalViewModel = viewModel()
+            var pickingTerm by remember { mutableStateOf(false) }
             val startMonth = remember { YearMonth.now() }
             NewGoalScreen(
-                name = name, onNameChange = { name = it },
-                target = target, onTargetChange = { target = it },
-                months = DemoData.NEW_GOAL_MONTHS,
+                name = vm.name, onNameChange = vm::changeName,
+                target = vm.target, onTargetChange = vm::changeTarget,
+                months = vm.months,
                 startMonth = startMonth,
-                onDeadlineClick = { /* TODO: seletor de prazo aberto não existe no Figma */ },
+                onDeadlineClick = { pickingTerm = true },
+                errorMessage = vm.error,
                 onBack = { nav.popBackStack() },
-                onCreate = { nav.popBackStack() }, // TODO(back end): salvar o objetivo
+                onCreate = { vm.create { nav.popBackStack() } }, // a lista se atualiza ao reaparecer
             )
+            if (pickingTerm) {
+                GoalTermPickerDialog(vm.months, vm::changeMonths) { pickingTerm = false }
+            }
         }
 
         // ---- 15 Detalhe do objetivo ----
         composable(
             route = Routes.GOAL_DETAIL,
             arguments = listOf(navArgument(Routes.ARG_GOAL_ID) { type = NavType.LongType }),
-        ) { entry ->
-            val goalId = entry.arguments?.getLong(Routes.ARG_GOAL_ID)
-            // TODO(back end): buscar o objetivo e os aportes pelo id.
-            val goal = DemoData.goals.firstOrNull { it.id == goalId } ?: DemoData.goals.first()
-            GoalDetailScreen(
-                goal = goal,
-                monthlyContribution = DemoData.goalMonthlyContribution,
-                forecast = DemoData.goalForecast,
-                contributions = DemoData.contributions,
-                onBack = { nav.popBackStack() },
-                onEdit = { /* TODO: tela de edição do objetivo não existe no Figma */ },
-                onAddContribution = { /* TODO: fluxo de adicionar aporte não existe no Figma */ },
-            )
+        ) {
+            // O id da rota chega ao ViewModel pelo SavedStateHandle.
+            val vm: GoalDetailViewModel = viewModel()
+            var adding by remember { mutableStateOf(false) }
+            when (val state = vm.state) {
+                Load.Loading -> LoadingScreen()
+                Load.Error -> ErrorScreen(onBack = { nav.popBackStack() }, onRetry = vm::load, onTabSelected = onTab)
+                is Load.Success -> GoalDetailScreen(
+                    goal = state.data.goal,
+                    monthlyContribution = state.data.monthlyContribution,
+                    forecast = state.data.forecast,
+                    contributions = state.data.contributions,
+                    onBack = { nav.popBackStack() },
+                    onEdit = { /* TODO: editar objetivo não existe no Figma nem na API (só criar e listar) */ },
+                    onAddContribution = { vm.clearError(); adding = true },
+                )
+            }
+            if (adding) {
+                AddContributionDialog(
+                    errorMessage = vm.error,
+                    saving = vm.saving,
+                    onConfirm = { type, amount, date -> vm.addContribution(type, amount, date) { adding = false } },
+                    onDismiss = { adding = false },
+                )
+            }
         }
 
         // ---- 16 Simular ----
         composable(Routes.SIMULATE) {
-            var initial by rememberSaveable { mutableStateOf(DemoData.simulationInitial) }
-            var monthly by rememberSaveable { mutableStateOf(DemoData.simulationMonthly) }
-            // mutableIntStateOf evita "boxing" (Integer) para estados de int.
-            var months by rememberSaveable { mutableIntStateOf(DemoData.SIMULATION_MONTHS) }
             SimulateScreen(
-                initial = initial, onInitialChange = { initial = it },
-                monthly = monthly, onMonthlyChange = { monthly = it },
-                months = months, onMonthsChange = { months = it },
-                onSimulate = {
-                    simulationResult = simulate(initial, monthly, months)
-                    nav.navigate(Routes.SIMULATION_RESULT)
-                },
+                initial = simulation.initial, onInitialChange = simulation::changeInitial,
+                monthly = simulation.monthly, onMonthlyChange = simulation::changeMonthly,
+                months = simulation.months, onMonthsChange = simulation::changeMonths,
+                errorMessage = simulation.error,
+                // O cálculo é feito pela API (a mesma regra da simulação salva).
+                onSimulate = { simulation.calculate { nav.navigate(Routes.SIMULATION_RESULT) } },
                 onTabSelected = onTab,
             )
         }
 
         // ---- 17 Resultado da simulação ----
         composable(Routes.SIMULATION_RESULT) {
-            SimulationResultScreen(
-                // Se o processo foi recriado e o resultado se perdeu, mostra o exemplo do mockup.
-                result = simulationResult ?: DemoData.simulationResult,
-                onBack = { nav.popBackStack() },
-                onSave = { nav.navigate(Routes.SAVED_SIMULATIONS) }, // TODO(back end): salvar a simulação
-                onNewSimulation = { nav.popBackStack() },
-            )
+            val result = simulation.result
+            if (result == null) {
+                // Não deveria acontecer (o ViewModel guarda o resultado); volta para o formulário.
+                LaunchedEffect(Unit) { nav.popBackStack() }
+            } else {
+                SimulationResultScreen(
+                    result = result,
+                    errorMessage = simulation.error,
+                    onBack = { nav.popBackStack() },
+                    onSave = { simulation.save { nav.navigate(Routes.SAVED_SIMULATIONS) } },
+                    onNewSimulation = { simulation.clearError(); nav.popBackStack() },
+                )
+            }
         }
 
         // ---- 18 Simulações salvas ----
         composable(Routes.SAVED_SIMULATIONS) {
-            SavedSimulationsScreen(
-                simulations = DemoData.savedSimulations,
-                onBack = { nav.popBackStack() },
-                onTabSelected = onTab,
-            )
+            val vm: SavedSimulationsViewModel = viewModel()
+            when (val state = vm.state) {
+                Load.Loading -> LoadingScreen(BottomTab.Simulate, onTab)
+                Load.Error -> ErrorScreen(onBack = { nav.popBackStack() }, onRetry = vm::load, onTabSelected = onTab)
+                is Load.Success -> SavedSimulationsScreen(
+                    simulations = state.data,
+                    onBack = { nav.popBackStack() },
+                    onTabSelected = onTab,
+                )
+            }
         }
 
         // ---- 19 Perfil ----
@@ -471,6 +504,7 @@ fun SobraNavHost(modifier: Modifier = Modifier) {
                 onTermsClick = { /* TODO: tela não existe no Figma */ },
                 onLogout = {
                     setup.reset()
+                    simulation.reset()
                     Graph.auth.logout()
                     nav.navigateClearingStack(Routes.LOGIN)
                 },

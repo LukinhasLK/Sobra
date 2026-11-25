@@ -42,6 +42,7 @@ import androidx.compose.ui.unit.dp
 import com.unasp.sobra.R
 import com.unasp.sobra.data.DemoData
 import com.unasp.sobra.domain.SimulationResult
+import com.unasp.sobra.ui.components.ErrorText
 import com.unasp.sobra.ui.components.BackHeader
 import com.unasp.sobra.ui.components.Badge
 import com.unasp.sobra.ui.components.BottomTab
@@ -96,6 +97,7 @@ fun SimulateScreen(
     onSimulate: () -> Unit,
     onTabSelected: (BottomTab) -> Unit,
     modifier: Modifier = Modifier,
+    errorMessage: String? = null,
 ) {
     SobraScreen(modifier = modifier, bottomTab = BottomTab.Simulate, onTabSelected = onTabSelected) {
         TitleHeader(stringResource(R.string.simulate_title))
@@ -120,6 +122,7 @@ fun SimulateScreen(
                     WhiteMoneyField(stringResource(R.string.simulate_monthly), monthly, onMonthlyChange)
                     TermControl(months, onMonthsChange)
                     RateCard()
+                    ErrorText(errorMessage)
                 }
                 Box(modifier = Modifier.padding(Dimens.Space24)) {
                     PrimaryButton(stringResource(R.string.action_simulate), onSimulate)
@@ -216,6 +219,7 @@ fun SimulationResultScreen(
     onSave: () -> Unit,
     onNewSimulation: () -> Unit,
     modifier: Modifier = Modifier,
+    errorMessage: String? = null,
 ) {
     SobraScreen(modifier = modifier) {
         BackHeader(stringResource(R.string.simulate_title), onBack)
@@ -270,6 +274,7 @@ fun SimulationResultScreen(
                 )
                 BreakdownLine(stringResource(R.string.result_yield), result.estimatedYield.toBrlPositive(), SobraColors.Green)
             }
+            ErrorText(errorMessage, Modifier.padding(top = Dimens.Space16))
         }
         // Rodapé fixo, fora da rolagem: o conteúdo nunca fica escondido atrás dos botões.
         FooterActions(gap = Dimens.Space8) {

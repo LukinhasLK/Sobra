@@ -22,8 +22,29 @@ class AuthViewModel : ViewModel() {
     var error by mutableStateOf<String?>(null)
         private set
 
+    /** Aviso de sucesso (ex.: "link enviado"), mostrado em Teal. */
+    var info by mutableStateOf<String?>(null)
+        private set
+
     fun clearError() {
         error = null
+    }
+
+    /** Tela 07. A API responde igual para e-mail existente ou não, então o texto também é neutro. */
+    fun requestPasswordReset(email: String) {
+        if (email.isBlank()) {
+            error = "Informe seu e-mail."
+            return
+        }
+        if (loading) return
+        loading = true
+        error = null
+        info = null
+        viewModelScope.launch {
+            val message = runSubmit { Graph.auth.requestPasswordReset(email) }
+            loading = false
+            if (message == null) info = "Se o e-mail estiver cadastrado, você receberá as instruções em instantes." else error = message
+        }
     }
 
     /** @param onDone recebe `true` se a configuração inicial já foi feita (vai direto à Home). */

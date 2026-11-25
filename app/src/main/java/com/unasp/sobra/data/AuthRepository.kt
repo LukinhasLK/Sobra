@@ -28,6 +28,11 @@ class AuthRepository(private val api: ApiClient, private val session: SessionSto
         return saveSession(api.post("/auth/cadastro", body))
     }
 
+    /** OP-04: a API responde igual exista ou não o e-mail (não revela quem tem conta). */
+    suspend fun requestPasswordReset(email: String) {
+        api.post("/auth/recuperar-senha", JSONObject().put("email", email.trim()))
+    }
+
     /** Sai na hora (apaga o token local) e avisa o servidor em segundo plano; falha de rede é ignorada. */
     fun logout() {
         val token = session.token

@@ -219,6 +219,8 @@ fun RecoverPasswordScreen(
     onSend: () -> Unit,
     onBackToLogin: () -> Unit,
     modifier: Modifier = Modifier,
+    errorMessage: String? = null,
+    infoMessage: String? = null,
 ) {
     // TODO: o estado depois do envio (confirmação, erro) não existe no Figma.
     FormScreen(
@@ -249,6 +251,11 @@ fun RecoverPasswordScreen(
                 placeholder = stringResource(R.string.register_email_placeholder),
                 keyboardOptions = EmailKeyboard,
             )
+            FormError(errorMessage)
+            // Confirmação do envio, em Teal (o design não define o estado pós-envio).
+            if (infoMessage != null) {
+                Text(text = infoMessage, style = SobraType.FormLabel, color = SobraColors.Teal)
+            }
         }
     }
 }
