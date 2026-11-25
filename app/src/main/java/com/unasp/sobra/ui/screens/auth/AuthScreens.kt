@@ -6,6 +6,10 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.text.input.KeyboardCapitalization
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.autofill.ContentType
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -37,8 +41,17 @@ import com.unasp.sobra.ui.theme.manrope
 // TODO: regras de validação (e-mail válido, tamanho mínimo da senha, senhas iguais) e a
 //  aparência das mensagens de erro não foram definidas no design.
 
-private val EmailKeyboard = KeyboardOptions(keyboardType = KeyboardType.Email)
-private val PasswordKeyboard = KeyboardOptions(keyboardType = KeyboardType.Password)
+// Teclados: "Próximo" leva ao campo seguinte e "Concluir" no último campo envia o formulário.
+// Sem autocorreção em e-mail e senha (o corretor estraga endereços e senhas).
+private val EmailNextKeyboard = KeyboardOptions(
+    keyboardType = KeyboardType.Email, imeAction = ImeAction.Next, autoCorrectEnabled = false,
+)
+private val EmailDoneKeyboard = EmailNextKeyboard.copy(imeAction = ImeAction.Done)
+private val PasswordNextKeyboard = KeyboardOptions(
+    keyboardType = KeyboardType.Password, imeAction = ImeAction.Next, autoCorrectEnabled = false,
+)
+private val PasswordDoneKeyboard = PasswordNextKeyboard.copy(imeAction = ImeAction.Done)
+private val NameKeyboard = KeyboardOptions(capitalization = KeyboardCapitalization.Words, imeAction = ImeAction.Next)
 private val LoginHint = manrope(13, FontWeight.W400)
 
 /** Coluna dos campos: padding horizontal 24, gap 16. */
@@ -75,12 +88,14 @@ fun LoginScreen(
     onCreateAccount: () -> Unit,
     modifier: Modifier = Modifier,
     errorMessage: String? = null,
+    loading: Boolean = false,
 ) {
     FormScreen(
         modifier = modifier,
         footer = {
             FooterActions(gap = Dimens.Space20) {
-                PrimaryButton(stringResource(R.string.action_login), onLogin)
+                // Enquanto a API responde, o texto mostra que o toque foi recebido.
+                PrimaryButton(stringResource(if (loading) R.string.action_logging_in else R.string.action_login), onLogin)
                 SecondaryButton(stringResource(R.string.action_create_account), onCreateAccount)
             }
         },
@@ -97,14 +112,17 @@ fun LoginScreen(
                 value = email,
                 onValueChange = onEmailChange,
                 placeholder = stringResource(R.string.login_email_placeholder),
-                keyboardOptions = EmailKeyboard,
+                keyboardOptions = EmailNextKeyboard,
+                contentType = ContentType.EmailAddress,
             )
             SoftField(
                 label = stringResource(R.string.field_password),
                 value = password,
                 onValueChange = onPasswordChange,
                 placeholder = stringResource(R.string.login_password_placeholder),
-                keyboardOptions = PasswordKeyboard,
+                keyboardOptions = PasswordDoneKeyboard,
+                keyboardActions = KeyboardActions(onDone = { onLogin() }),
+                contentType = ContentType.Password,
                 // Esconde os caracteres com bolinhas enquanto a senha não está visível.
                 visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
                 trailing = {
@@ -141,12 +159,19 @@ fun RegisterScreen(
     onGoToLogin: () -> Unit,
     modifier: Modifier = Modifier,
     errorMessage: String? = null,
+    loading: Boolean = false,
+    passwordVisible: Boolean = false,
+    onTogglePasswordVisibility: () -> Unit = {},
 ) {
+    val passwordTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation()
     FormScreen(
         modifier = modifier,
         footer = {
             FooterActions(gap = Dimens.Space20) {
-                PrimaryButton(stringResource(R.string.action_create_account), onCreateAccount)
+                PrimaryButton(
+                    stringResource(if (loading) R.string.action_creating_account else R.string.action_create_account),
+                    onCreateAccount,
+                )
                 // Texto com dois estilos na mesma linha: AnnotatedString aplica um estilo
                 // diferente a cada trecho.
                 val text = buildAnnotatedString {
@@ -181,29 +206,43 @@ fun RegisterScreen(
                 value = name,
                 onValueChange = onNameChange,
                 placeholder = stringResource(R.string.register_name_placeholder),
+                keyboardOptions = NameKeyboard,
+                contentType = ContentType.PersonFullName,
             )
             SoftField(
                 label = stringResource(R.string.field_email),
                 value = email,
                 onValueChange = onEmailChange,
                 placeholder = stringResource(R.string.register_email_placeholder),
-                keyboardOptions = EmailKeyboard,
+                keyboardOptions = EmailNextKeyboard,
+                contentType = ContentType.EmailAddress,
             )
             SoftField(
                 label = stringResource(R.string.field_password),
                 value = password,
                 onValueChange = onPasswordChange,
                 placeholder = stringResource(R.string.register_password_placeholder),
-                keyboardOptions = PasswordKeyboard,
-                visualTransformation = PasswordVisualTransformation(),
+                keyboardOptions = PasswordNextKeyboard,
+                visualTransformation = passwordTransformation,
+                contentType = ContentType.NewPassword,
+                // A regra aparece antes do erro, não depois (a API exige 8 a 64 caracteres).
+                helper = stringResource(R.string.register_password_hint),
+                trailing = {
+                    TextLink(
+                        text = stringResource(if (passwordVisible) R.string.action_hide else R.string.action_show),
+                        onClick = onTogglePasswordVisibility,
+                    )
+                },
             )
             SoftField(
                 label = stringResource(R.string.field_confirm_password),
                 value = confirmPassword,
                 onValueChange = onConfirmPasswordChange,
                 placeholder = stringResource(R.string.register_confirm_placeholder),
-                keyboardOptions = PasswordKeyboard,
-                visualTransformation = PasswordVisualTransformation(),
+                keyboardOptions = PasswordDoneKeyboard,
+                keyboardActions = KeyboardActions(onDone = { onCreateAccount() }),
+                visualTransformation = passwordTransformation,
+                contentType = ContentType.NewPassword,
             )
             FormError(errorMessage)
         }
@@ -221,13 +260,14 @@ fun RecoverPasswordScreen(
     modifier: Modifier = Modifier,
     errorMessage: String? = null,
     infoMessage: String? = null,
+    loading: Boolean = false,
 ) {
     // TODO: o estado depois do envio (confirmação, erro) não existe no Figma.
     FormScreen(
         modifier = modifier,
         footer = {
             FooterActions(gap = Dimens.Space20) {
-                PrimaryButton(stringResource(R.string.recover_send), onSend)
+                PrimaryButton(stringResource(if (loading) R.string.action_sending else R.string.recover_send), onSend)
                 TextLink(
                     text = stringResource(R.string.recover_back_to_login),
                     onClick = onBackToLogin,
@@ -249,7 +289,9 @@ fun RecoverPasswordScreen(
                 value = email,
                 onValueChange = onEmailChange,
                 placeholder = stringResource(R.string.register_email_placeholder),
-                keyboardOptions = EmailKeyboard,
+                keyboardOptions = EmailDoneKeyboard,
+                keyboardActions = KeyboardActions(onDone = { onSend() }),
+                contentType = ContentType.EmailAddress,
             )
             FormError(errorMessage)
             // Confirmação do envio, em Teal (o design não define o estado pós-envio).

@@ -12,13 +12,17 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.autofill.ContentType
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.semantics.contentType
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -45,6 +49,7 @@ private val FieldText = manrope(15, FontWeight.W400, lineHeight = 22.5.sp) // 15
 private val WhiteFieldText = manrope(15, FontWeight.W400)
 private val MoneyPrefixText = manrope(15, FontWeight.W700)
 private val MoneyValueText = manrope(15, FontWeight.W600)
+private val HelperText = manrope(12, FontWeight.W400)
 
 const val CURRENCY_SYMBOL = "R$"
 
@@ -65,6 +70,12 @@ fun SoftField(
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
     visualTransformation: VisualTransformation = VisualTransformation.None,
     trailing: (@Composable () -> Unit)? = null,
+    // Ação da tecla "Próximo"/"Concluir" do teclado (ex.: enviar o login).
+    keyboardActions: KeyboardActions = KeyboardActions.Default,
+    // Diz ao preenchimento automático (gerenciador de senhas) o que é o campo.
+    contentType: ContentType? = null,
+    // Texto de ajuda abaixo da caixa (ex.: regras da senha).
+    helper: String? = null,
 ) {
     Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(Dimens.Space8)) {
         Text(text = label, style = SobraType.FormLabel, color = SobraColors.TextSecondary)
@@ -82,12 +93,15 @@ fun SoftField(
             BasicTextField(
                 value = value,
                 onValueChange = onValueChange,
-                modifier = Modifier.weight(1f), // ocupa o que sobrar da linha
+                modifier = Modifier
+                    .weight(1f) // ocupa o que sobrar da linha
+                    .then(if (contentType != null) Modifier.semantics { this.contentType = contentType } else Modifier),
                 singleLine = true,
                 // TODO: a cor do texto digitado não aparece no Figma (só o placeholder). TextPrimary?
                 textStyle = FieldText.copy(color = SobraColors.TextPrimary),
                 cursorBrush = SolidColor(SobraColors.Teal),
                 keyboardOptions = keyboardOptions,
+                keyboardActions = keyboardActions,
                 visualTransformation = visualTransformation,
                 // decorationBox envolve o texto digitado (innerTextField): aqui só para o placeholder.
                 decorationBox = { innerTextField ->
@@ -100,6 +114,9 @@ fun SoftField(
                 },
             )
             trailing?.invoke() // `?.invoke()` chama a função só se ela não for nula
+        }
+        if (helper != null) {
+            Text(text = helper, style = HelperText, color = SobraColors.TextSecondary)
         }
     }
 }

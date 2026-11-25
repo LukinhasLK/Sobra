@@ -5,12 +5,16 @@ import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import com.unasp.sobra.R
+import com.unasp.sobra.ui.theme.SobraType
+import com.unasp.sobra.ui.theme.SobraColors
+import com.unasp.sobra.ui.format.toBrlShort
 import com.unasp.sobra.data.DemoData
 import com.unasp.sobra.ui.components.ErrorText
 import com.unasp.sobra.ui.components.AmountCard
@@ -43,12 +47,13 @@ fun IncomeScreen(
     onContinue: () -> Unit,
     modifier: Modifier = Modifier,
     errorMessage: String? = null,
+    loading: Boolean = false,
 ) {
     FormScreen(
         modifier = modifier,
         footer = {
             FooterActions(gap = Dimens.Space20) {
-                PrimaryButton(stringResource(R.string.action_continue), onContinue)
+                PrimaryButton(stringResource(if (loading) R.string.action_saving else R.string.action_continue), onContinue)
             }
         },
     ) {
@@ -94,12 +99,28 @@ fun CategoriesScreen(
     onFinish: () -> Unit,
     modifier: Modifier = Modifier,
     errorMessage: String? = null,
+    loading: Boolean = false,
+    // Renda do passo 1: dá sentido ao total estimado ("R$ 4.000 de R$ 5.500").
+    income: BigDecimal? = null,
 ) {
+    // Soma só as categorias com valor (as sem valor ficam inativas).
+    val estimated = budgets.mapNotNull { it.amount }.fold(BigDecimal.ZERO) { acc, value -> acc + value }
     FormScreen(
         modifier = modifier,
         footer = {
             FooterActions(gap = Dimens.Space20) {
-                PrimaryButton(stringResource(R.string.action_finish), onFinish)
+                // Total estimado x renda, logo acima do botão: a pessoa vê o efeito de cada valor.
+                if (income != null && income.signum() > 0) {
+                    Text(
+                        stringResource(
+                            if (estimated > income) R.string.categories_total_over else R.string.categories_total,
+                            estimated.toBrlShort(), income.toBrlShort(),
+                        ),
+                        style = SobraType.FormLabel,
+                        color = SobraColors.TextSecondary,
+                    )
+                }
+                PrimaryButton(stringResource(if (loading) R.string.action_saving else R.string.action_finish), onFinish)
             }
         },
     ) {

@@ -203,8 +203,10 @@ fun SobraNavHost(modifier: Modifier = Modifier) {
             val auth: AuthViewModel = viewModel()
             LoginScreen(
                 errorMessage = auth.error,
-                email = email, onEmailChange = { email = it },
-                password = password, onPasswordChange = { password = it },
+                loading = auth.loading,
+                // Ao editar, a mensagem de erro antiga some (ela falava do valor anterior).
+                email = email, onEmailChange = { email = it; auth.clearError() },
+                password = password, onPasswordChange = { password = it; auth.clearError() },
                 passwordVisible = passwordVisible,
                 onTogglePasswordVisibility = { passwordVisible = !passwordVisible },
                 onBack = { nav.popBackStack() },
@@ -226,13 +228,17 @@ fun SobraNavHost(modifier: Modifier = Modifier) {
             var email by rememberSaveable { mutableStateOf("") }
             var password by remember { mutableStateOf("") }
             var confirmPassword by remember { mutableStateOf("") }
+            var passwordVisible by rememberSaveable { mutableStateOf(false) }
             val auth: AuthViewModel = viewModel()
             RegisterScreen(
                 errorMessage = auth.error,
-                name = name, onNameChange = { name = it },
-                email = email, onEmailChange = { email = it },
-                password = password, onPasswordChange = { password = it },
-                confirmPassword = confirmPassword, onConfirmPasswordChange = { confirmPassword = it },
+                loading = auth.loading,
+                passwordVisible = passwordVisible,
+                onTogglePasswordVisibility = { passwordVisible = !passwordVisible },
+                name = name, onNameChange = { name = it; auth.clearError() },
+                email = email, onEmailChange = { email = it; auth.clearError() },
+                password = password, onPasswordChange = { password = it; auth.clearError() },
+                confirmPassword = confirmPassword, onConfirmPasswordChange = { confirmPassword = it; auth.clearError() },
                 onBack = { nav.popBackStack() },
                 onCreateAccount = {
                     auth.register(name, email, password, confirmPassword) {
@@ -249,9 +255,10 @@ fun SobraNavHost(modifier: Modifier = Modifier) {
             var email by rememberSaveable { mutableStateOf("") }
             val auth: AuthViewModel = viewModel()
             RecoverPasswordScreen(
-                email = email, onEmailChange = { email = it },
+                email = email, onEmailChange = { email = it; auth.clearError() },
                 errorMessage = auth.error,
                 infoMessage = auth.info,
+                loading = auth.loading,
                 onBack = { nav.popBackStack() },
                 // O estado pós-envio não existe no Figma: a confirmação aparece abaixo do campo.
                 onSend = { auth.requestPasswordReset(email) },
@@ -264,6 +271,7 @@ fun SobraNavHost(modifier: Modifier = Modifier) {
             IncomeScreen(
                 income = setup.income, onIncomeChange = setup::changeIncome,
                 errorMessage = setup.error,
+                loading = setup.loading,
                 onBack = { nav.popBackStack() },
                 onContinue = { setup.saveIncome { nav.navigate(Routes.CATEGORIES) } },
             )
@@ -275,7 +283,9 @@ fun SobraNavHost(modifier: Modifier = Modifier) {
             var editing by remember { mutableStateOf<Category?>(null) }
             CategoriesScreen(
                 budgets = setup.budgets,
+                income = setup.income,
                 errorMessage = setup.error,
+                loading = setup.loading,
                 onCategoryClick = { editing = it },
                 onBack = { nav.popBackStack() },
                 onFinish = { setup.saveCategories { nav.navigateClearingStack(Routes.HOME) } },
