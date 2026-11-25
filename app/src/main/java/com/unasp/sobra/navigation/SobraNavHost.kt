@@ -430,6 +430,8 @@ fun SobraNavHost(modifier: Modifier = Modifier) {
                 errorMessage = simulation.error,
                 // O cálculo é feito pela API (a mesma regra da simulação salva).
                 onSimulate = { simulation.calculate { nav.navigate(Routes.SIMULATION_RESULT) } },
+                onOpenSaved = { nav.navigate(Routes.SAVED_SIMULATIONS) },
+                loading = simulation.loading,
                 onTabSelected = onTab,
             )
         }
@@ -444,6 +446,7 @@ fun SobraNavHost(modifier: Modifier = Modifier) {
                 SimulationResultScreen(
                     result = result,
                     errorMessage = simulation.error,
+                    saving = simulation.loading,
                     onBack = { nav.popBackStack() },
                     onSave = { simulation.save { nav.navigate(Routes.SAVED_SIMULATIONS) } },
                     onNewSimulation = { simulation.clearError(); nav.popBackStack() },
@@ -460,6 +463,11 @@ fun SobraNavHost(modifier: Modifier = Modifier) {
                 is Load.Success -> SavedSimulationsScreen(
                     simulations = state.data,
                     onBack = { nav.popBackStack() },
+                    // Refaz o cálculo pela API com os mesmos valores e abre o resultado.
+                    onSimulationClick = { saved ->
+                        simulation.prefill(saved.initial, saved.monthlyContribution, saved.months)
+                        simulation.calculate { nav.navigate(Routes.SIMULATION_RESULT) }
+                    },
                     onTabSelected = onTab,
                 )
             }

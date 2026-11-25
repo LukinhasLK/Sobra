@@ -68,4 +68,6 @@ data class SavedSimulation(
     val monthlyContribution: BigDecimal,
     val months: Int,
     val result: BigDecimal,
+    /** Taxa mensal usada no cálculo (a API grava junto da simulação); nula nos dados de exemplo. */
+    val monthlyRate: BigDecimal? = null,
 )

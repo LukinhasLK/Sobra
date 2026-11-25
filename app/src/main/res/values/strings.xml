@@ -273,4 +273,16 @@
     <string name="new_goal_end_month">Conclusão em %1$s</string>
     <string name="contribution_type_monthly_hint">O aporte planejado</string>
     <string name="contribution_type_extra_hint">Um valor a mais</string>
+
+    <!-- Simular refinado -->
+    <string name="simulate_saved_link">Salvas</string>
+    <string name="simulate_preview_label">Estimativa em %1$s</string>
+    <string name="action_simulating">Calculando…</string>
+    <string name="result_final_in">Estimativa final em %1$s</string>
+    <string name="result_rate">Taxa usada</string>
+    <string name="saved_hint">Toque em uma simulação para ver o resultado de novo.</string>
+    <string name="saved_rate">%1$s%% a.m.</string>
+    <string name="saved_empty_title">Nenhuma simulação salva</string>
+    <string name="saved_empty_description">Faça uma simulação e toque em Salvar para guardá-la aqui.</string>
+    <string name="saved_empty_button">Fazer uma simulação</string>
 </resources>

@@ -36,6 +36,13 @@ class SimulationViewModel : ViewModel() {
     fun changeMonths(value: Int) { months = value }
     fun clearError() { error = null }
 
+    /** Refaz uma simulação salva: preenche o formulário com os mesmos valores. */
+    fun prefill(initial: BigDecimal, monthly: BigDecimal, months: Int) {
+        this.initial = initial
+        this.monthly = monthly
+        this.months = months
+    }
+
     fun calculate(onDone: () -> Unit) {
         if (loading) return
         loading = true

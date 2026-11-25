@@ -1,5 +1,23 @@
 package com.unasp.sobra.ui.screens.simulate
 
+import com.unasp.sobra.ui.format.toBrlNumber
+import com.unasp.sobra.ui.components.TextLink
+import com.unasp.sobra.ui.components.StateContent
+import com.unasp.sobra.ui.components.SelectChip
+import com.unasp.sobra.domain.simulate
+import androidx.compose.ui.semantics.setProgress
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.progressBarRangeInfo
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.ProgressBarRangeInfo
+import androidx.compose.runtime.remember
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.border
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
@@ -74,16 +92,22 @@ import kotlin.math.roundToInt
 // 16 Simular
 // ---------------------------------------------------------------------------------------
 
-// TODO: limites e incrementos do prazo NÃO foram definidos no design. Quais são?
-//  Com 1 a 38 meses, o prazo de 24 meses do mockup preenche 62,16% da trilha
-//  (o Figma mostra 62,15%). Troque à vontade: o resto da tela se adapta.
+// Limites do prazo = os da API (D-02: 1 a 120 meses). Antes era 1 a 38 só para a trilha do
+// mockup bater (24 meses = 62%); com os atalhos em chips, a trilha virou ajuste fino.
 const val PRAZO_MIN = 1
-const val PRAZO_MAX = 38
+const val PRAZO_MAX = 120
+
+/** Atalhos de prazo: os mais usados, de 6 meses a 10 anos. */
+private val TERM_PRESETS = listOf(6, 12, 24, 36, 60, 120)
+private val ThumbSize = 22.dp
+private val ThumbBorder = 3.dp
 
 private val TermLabel = manrope(13, FontWeight.W600)
 private val TermValue = manrope(13, FontWeight.W700)
 private val RateTitle = manrope(13, FontWeight.W700)
-private val RateHint = manrope(11, FontWeight.W400)
+private val RateHint = manrope(12, FontWeight.W400)
+private val PreviewLabel = manrope(13, FontWeight.W600)
+private val PreviewValue = manrope(24, FontWeight.W800)
 
 /** 16 Simular. */
 @Composable
@@ -95,12 +119,21 @@ fun SimulateScreen(
     months: Int,
     onMonthsChange: (Int) -> Unit,
     onSimulate: () -> Unit,
+    onOpenSaved: () -> Unit,
     onTabSelected: (BottomTab) -> Unit,
     modifier: Modifier = Modifier,
     errorMessage: String? = null,
+    loading: Boolean = false,
 ) {
+    // Prévia ao vivo, calculada no app com a mesma regra do servidor (o teste FinanceTest
+    // garante 14.680,67 nos dois). O resultado oficial continua vindo da API ao tocar em Simular.
+    val preview = remember(initial, monthly, months) { simulate(initial, monthly, months).finalAmount }
     SobraScreen(modifier = modifier, bottomTab = BottomTab.Simulate, onTabSelected = onTabSelected) {
-        TitleHeader(stringResource(R.string.simulate_title))
+        TitleHeader(
+            stringResource(R.string.simulate_title),
+            // Caminho para as simulações salvas (antes só se chegava lá salvando uma nova).
+            trailing = { TextLink(stringResource(R.string.simulate_saved_link), onOpenSaved) },
+        )
         // BoxWithConstraints informa a altura disponível (maxHeight), usada como altura
         // mínima da coluna: assim o SpaceBetween tem espaço para distribuir e, em telas
         // baixas ou com o teclado aberto, o conteúdo rola.
@@ -124,8 +157,15 @@ fun SimulateScreen(
                     RateCard()
                     ErrorText(errorMessage)
                 }
-                Box(modifier = Modifier.padding(Dimens.Space24)) {
-                    PrimaryButton(stringResource(R.string.action_simulate), onSimulate)
+                Column(
+                    modifier = Modifier.padding(Dimens.Space24),
+                    verticalArrangement = Arrangement.spacedBy(Dimens.Space16),
+                ) {
+                    PreviewCard(preview, months)
+                    PrimaryButton(
+                        stringResource(if (loading) R.string.action_simulating else R.string.action_simulate),
+                        onSimulate,
+                    )
                 }
                 Spacer(Modifier) // terceiro bloco: a navegação vem logo abaixo
             }
@@ -133,13 +173,18 @@ fun SimulateScreen(
     }
 }
 
-/** Prazo: label + valor em Teal, gap 12, trilha de 10 que funciona como slider. */
+/**
+ * Prazo: atalhos em chips (6 meses a 10 anos) e, abaixo, a trilha para ajuste fino, agora com
+ * uma bolinha mostrando onde tocar e acessível ao leitor de tela (ajuste por gesto de volume).
+ */
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun TermControl(months: Int, onMonthsChange: (Int) -> Unit) {
     // rememberUpdatedState mantém a referência mais recente do callback para o código de
     // gestos, que é criado uma vez só (pointerInput(Unit)).
     val currentOnChange by rememberUpdatedState(onMonthsChange)
     val range = PRAZO_MAX - PRAZO_MIN
+    val fraction = (months - PRAZO_MIN).toFloat() / range
 
     fun monthsAt(x: Float, width: Int): Int =
         (PRAZO_MIN + (x / width).coerceIn(0f, 1f) * range).roundToInt()
@@ -149,11 +194,35 @@ private fun TermControl(months: Int, onMonthsChange: (Int) -> Unit) {
             Text(stringResource(R.string.simulate_term), style = TermLabel, color = SobraColors.TextSecondary)
             Text(pluralStringResource(R.plurals.months_count, months, months), style = TermValue, color = SobraColors.TealDark)
         }
-        // O Figma não desenha "thumb" (bolinha): a própria trilha responde a toque e arrasto.
-        ProgressTrack(
-            progress = (months - PRAZO_MIN).toFloat() / range,
-            height = ProgressTrackHeight.Goal,
+        FlowRow(
+            horizontalArrangement = Arrangement.spacedBy(Dimens.Space8),
+            verticalArrangement = Arrangement.spacedBy(Dimens.Space8),
+        ) {
+            TERM_PRESETS.forEach { option ->
+                SelectChip(
+                    text = pluralStringResource(R.plurals.months_count, option, option),
+                    selected = option == months,
+                    onClick = { onMonthsChange(option) },
+                )
+            }
+        }
+        val termDescription = pluralStringResource(R.plurals.months_count, months, months)
+        // BoxWithConstraints dá a largura da trilha para posicionar a bolinha.
+        BoxWithConstraints(
             modifier = Modifier
+                .fillMaxWidth()
+                .height(ThumbSize)
+                // Leitor de tela: anuncia o prazo e permite ajustar sem arrastar.
+                .semantics {
+                    contentDescription = termDescription
+                    progressBarRangeInfo = ProgressBarRangeInfo(
+                        months.toFloat(), PRAZO_MIN.toFloat()..PRAZO_MAX.toFloat(), steps = range - 1,
+                    )
+                    setProgress { target ->
+                        currentOnChange(target.roundToInt().coerceIn(PRAZO_MIN, PRAZO_MAX))
+                        true
+                    }
+                }
                 // pointerInput recebe os eventos de toque brutos; cada bloco trata um gesto.
                 .pointerInput(Unit) {
                     detectTapGestures { offset -> currentOnChange(monthsAt(offset.x, size.width)) }
@@ -163,7 +232,36 @@ private fun TermControl(months: Int, onMonthsChange: (Int) -> Unit) {
                         currentOnChange(monthsAt(change.position.x, size.width))
                     }
                 },
+            contentAlignment = Alignment.CenterStart,
+        ) {
+            ProgressTrack(progress = fraction, height = ProgressTrackHeight.Goal)
+            Box(
+                modifier = Modifier
+                    .offset(x = (maxWidth - ThumbSize) * fraction)
+                    .size(ThumbSize)
+                    .clip(CircleShape)
+                    .background(SobraColors.Surface)
+                    .border(ThumbBorder, SobraColors.Teal, CircleShape),
+            )
+        }
+    }
+}
+
+/** Prévia ao vivo do resultado: muda enquanto a pessoa digita e escolhe o prazo. */
+@Composable
+private fun PreviewCard(finalAmount: BigDecimal, months: Int) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .sobraCard(Dimens.Radius20, background = SobraColors.TealLight, borderColor = null)
+            .padding(horizontal = Dimens.Space20, vertical = Dimens.Space16),
+        verticalArrangement = Arrangement.spacedBy(Dimens.Space4),
+    ) {
+        Text(
+            stringResource(R.string.simulate_preview_label, pluralStringResource(R.plurals.months_count, months, months)),
+            style = PreviewLabel, color = SobraColors.TealDark,
         )
+        Text(finalAmount.toBrl(), style = PreviewValue, color = SobraColors.TealDark)
     }
 }
 
@@ -189,8 +287,10 @@ private fun RateCard() {
 // 17 Resultado da simulação
 // ---------------------------------------------------------------------------------------
 
-private val BannerLabel = manrope(11, FontWeight.W600)
-private val BannerValue = manrope(18, FontWeight.W800)
+private val BannerLabel = manrope(13, FontWeight.W600)
+private val BannerValue = manrope(16, FontWeight.W800)
+private val BannerHero = manrope(32, FontWeight.W800)
+private val AxisText = manrope(11, FontWeight.W600)
 private val ChartTitle = manrope(13, FontWeight.W700)
 private val LegendText = manrope(11, FontWeight.W600)
 private val BreakdownLabel = manrope(13, FontWeight.W400)
@@ -220,6 +320,7 @@ fun SimulationResultScreen(
     onNewSimulation: () -> Unit,
     modifier: Modifier = Modifier,
     errorMessage: String? = null,
+    saving: Boolean = false,
 ) {
     SobraScreen(modifier = modifier) {
         BackHeader(stringResource(R.string.simulate_title), onBack)
@@ -229,16 +330,26 @@ fun SimulationResultScreen(
                 .verticalScroll(rememberScrollState())
                 .padding(start = Dimens.ScreenMargin, end = Dimens.ScreenMargin, bottom = Dimens.Space24),
         ) {
-            // Banner: padding 20, raio 20, Teal; segundo grupo alinhado à direita.
-            Row(
+            // Banner: a estimativa final é o número principal (grande); investido e rendimento
+            // ficam abaixo, menores. Teal escuro com texto branco (contraste 5,47).
+            Column(
                 modifier = Modifier
                     .fillMaxWidth()
                     .sobraCard(Dimens.Radius20, background = SobraColors.TealDark, borderColor = null)
                     .padding(Dimens.Space20),
-                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalArrangement = Arrangement.spacedBy(Dimens.Space16),
             ) {
-                BannerGroup(stringResource(R.string.result_total_invested), result.totalInvested.toBrl(), Alignment.Start)
-                BannerGroup(stringResource(R.string.result_final_estimate), result.finalAmount.toBrl(), Alignment.End)
+                Column(verticalArrangement = Arrangement.spacedBy(Dimens.Space4)) {
+                    Text(
+                        stringResource(R.string.result_final_in, pluralStringResource(R.plurals.months_count, result.months, result.months)),
+                        style = BannerLabel, color = SobraColors.TealLight,
+                    )
+                    Text(result.finalAmount.toBrl(), style = BannerHero, color = SobraColors.OnTeal)
+                }
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                    BannerGroup(stringResource(R.string.result_total_invested), result.totalInvested.toBrl(), Alignment.Start)
+                    BannerGroup(stringResource(R.string.result_yield), result.estimatedYield.toBrlPositive(), Alignment.End)
+                }
             }
 
             // Card do gráfico: 20 abaixo do banner; padding 20, gap 16, raio 20.
@@ -251,7 +362,17 @@ fun SimulationResultScreen(
                 verticalArrangement = Arrangement.spacedBy(Dimens.Space16),
             ) {
                 Text(stringResource(R.string.result_chart_title), style = ChartTitle, color = SobraColors.TextPrimary)
-                SimulationChart(result)
+                Column(verticalArrangement = Arrangement.spacedBy(Dimens.Space6)) {
+                    SimulationChart(result)
+                    // Referência de tempo: começo e fim do período.
+                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                        Text(stringResource(R.string.day_today), style = AxisText, color = SobraColors.TextSecondary)
+                        Text(
+                            pluralStringResource(R.plurals.months_count, result.months, result.months),
+                            style = AxisText, color = SobraColors.TextSecondary,
+                        )
+                    }
+                }
                 Row(horizontalArrangement = Arrangement.spacedBy(Dimens.Space16)) {
                     LegendItem(SobraColors.Teal, stringResource(R.string.result_legend_with_yield))
                     LegendItem(SobraColors.ChartNoYield, stringResource(R.string.result_legend_without_yield))
@@ -273,12 +394,14 @@ fun SimulationResultScreen(
                     result.totalContributions.toBrl(), SobraColors.TextPrimary,
                 )
                 BreakdownLine(stringResource(R.string.result_yield), result.estimatedYield.toBrlPositive(), SobraColors.Green)
+                // A taxa usada, para a pessoa saber de onde vem o rendimento.
+                BreakdownLine(stringResource(R.string.result_rate), stringResource(R.string.simulate_rate_title), SobraColors.TextPrimary)
             }
             ErrorText(errorMessage, Modifier.padding(top = Dimens.Space16))
         }
         // Rodapé fixo, fora da rolagem: o conteúdo nunca fica escondido atrás dos botões.
         FooterActions(gap = Dimens.Space8) {
-            PrimaryButton(stringResource(R.string.action_save), onSave)
+            PrimaryButton(stringResource(if (saving) R.string.action_saving else R.string.action_save), onSave)
             SecondaryButton(stringResource(R.string.action_new_simulation), onNewSimulation)
         }
     }
@@ -386,6 +509,7 @@ private val SavedResultValue = manrope(16, FontWeight.W800)
 fun SavedSimulationsScreen(
     simulations: List<SavedSimulation>,
     onBack: () -> Unit,
+    onSimulationClick: (SavedSimulation) -> Unit,
     onTabSelected: (BottomTab) -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -397,26 +521,45 @@ fun SavedSimulationsScreen(
             // TODO: a cor do chevron desta tela não foi informada no Figma (usando TextPrimary).
             chevronTint = SobraColors.TextPrimary,
         )
+        if (simulations.isEmpty()) {
+            StateContent(
+                icon = R.drawable.ic_target_64,
+                circleColor = SobraColors.Soft,
+                iconTint = SobraColors.Teal,
+                title = stringResource(R.string.saved_empty_title),
+                description = stringResource(R.string.saved_empty_description),
+                buttonText = stringResource(R.string.saved_empty_button),
+                onButtonClick = onBack,
+            )
+            return@SobraScreen
+        }
         LazyColumn(
             modifier = Modifier.weight(1f),
             contentPadding = PaddingValues(Dimens.Space24),
             verticalArrangement = Arrangement.spacedBy(Dimens.Space16),
         ) {
             item {
-                Text(stringResource(R.string.saved_subtitle), style = SavedSubtitle, color = SobraColors.TextPrimary)
+                Column(verticalArrangement = Arrangement.spacedBy(Dimens.Space4)) {
+                    Text(stringResource(R.string.saved_subtitle), style = SavedSubtitle, color = SobraColors.TextPrimary)
+                    Text(stringResource(R.string.saved_hint), style = ParamLabel, color = SobraColors.TextSecondary)
+                }
             }
-            items(simulations, key = { it.id }) { simulation -> SavedSimulationCard(simulation) }
+            items(simulations, key = { it.id }) { simulation ->
+                SavedSimulationCard(simulation, onClick = { onSimulationClick(simulation) })
+            }
         }
     }
 }
 
 /** Card de simulação salva: padding 20, gap 16, raio 20, borda 1. */
 @Composable
-private fun SavedSimulationCard(simulation: SavedSimulation) {
+private fun SavedSimulationCard(simulation: SavedSimulation, onClick: () -> Unit) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .sobraCard(Dimens.Radius20)
+            // Tocar refaz a simulação com os mesmos valores e abre o resultado.
+            .clickable(role = Role.Button, onClick = onClick)
             .padding(Dimens.Space20),
         verticalArrangement = Arrangement.spacedBy(Dimens.Space16),
     ) {
@@ -426,8 +569,11 @@ private fun SavedSimulationCard(simulation: SavedSimulation) {
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Text(simulation.date.toShortMonthDate(), style = SavedDate, color = SobraColors.TextSecondary)
+            // O selo mostra a taxa usada (gravada com a simulação), no lugar de "Salva", que
+            // se repetia em todos os cards de uma lista que já é só de salvas.
             Badge(
-                text = stringResource(R.string.saved_badge),
+                text = simulation.monthlyRate?.let { stringResource(R.string.saved_rate, it.movePointRight(2).toBrlNumber()) }
+                    ?: stringResource(R.string.saved_badge),
                 textStyle = SavedBadge,
                 horizontalPadding = Dimens.Space10,
                 verticalPadding = Dimens.Space4,
@@ -467,7 +613,7 @@ private fun SimulateScreenPreview() {
             initial = DemoData.simulationInitial, onInitialChange = {},
             monthly = DemoData.simulationMonthly, onMonthlyChange = {},
             months = DemoData.SIMULATION_MONTHS, onMonthsChange = {},
-            onSimulate = {}, onTabSelected = {},
+            onSimulate = {}, onOpenSaved = {}, onTabSelected = {},
         )
     }
 }
@@ -483,5 +629,5 @@ private fun SimulationResultScreenPreview() {
 @Preview(widthDp = 402, heightDp = 874)
 @Composable
 private fun SavedSimulationsScreenPreview() {
-    SobraTheme { SavedSimulationsScreen(DemoData.savedSimulations, onBack = {}, onTabSelected = {}) }
+    SobraTheme { SavedSimulationsScreen(DemoData.savedSimulations, onBack = {}, onSimulationClick = {}, onTabSelected = {}) }
 }

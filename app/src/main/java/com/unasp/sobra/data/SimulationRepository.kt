@@ -46,6 +46,7 @@ class SimulationRepository(private val api: ApiClient) {
                 monthlyContribution = BigDecimal(item.getString("aporte_mensal")),
                 months = item.getInt("prazo_meses"),
                 result = BigDecimal(item.getString("resultado")),
+                monthlyRate = if (item.isNull("taxa_mensal")) null else BigDecimal(item.getString("taxa_mensal")),
             )
         }
     }
