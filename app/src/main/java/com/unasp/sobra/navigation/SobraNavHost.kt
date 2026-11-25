@@ -12,6 +12,11 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import com.unasp.sobra.ui.components.MessageDialog
+import com.unasp.sobra.ui.components.DialogField
+import com.unasp.sobra.ui.components.DialogBody
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.platform.LocalContext
 import androidx.core.view.WindowCompat
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
@@ -477,30 +482,79 @@ fun SobraNavHost(modifier: Modifier = Modifier) {
         composable(Routes.PROFILE) {
             val vm: ProfileViewModel = viewModel()
             LaunchedEffect(Unit) { vm.refresh() }
-            val profile = (vm.state as? Load.Success)?.data
-            if (vm.state == Load.Error) {
-                ErrorScreen(onBack = vm::load, onRetry = vm::load, onTabSelected = onTab)
-                return@composable
+            var dialog by remember { mutableStateOf<ProfileDialog?>(null) }
+            val profile = when (val state = vm.state) {
+                Load.Loading -> { LoadingScreen(BottomTab.Profile, onTab); return@composable }
+                Load.Error -> {
+                    ErrorScreen(onBack = vm::load, onRetry = vm::load, onTabSelected = onTab)
+                    return@composable
+                }
+                is Load.Success -> state.data
             }
             ProfileScreen(
-                // Enquanto carrega, os campos ficam vazios (não há skeleton do Perfil no design).
-                initials = profile?.initials.orEmpty(),
-                name = profile?.name.orEmpty(),
-                email = profile?.email.orEmpty(),
-                notificationsEnabled = profile?.notificationsEnabled ?: true,
+                initials = profile.initials,
+                name = profile.name,
+                email = profile.email,
+                notificationsEnabled = profile.notificationsEnabled,
                 onNotificationsChange = vm::setNotifications,
-                onPersonalDataClick = { /* TODO: tela não existe no Figma */ },
-                onSecurityClick = { /* TODO: tela não existe no Figma */ },
-                onAboutClick = { /* TODO: tela não existe no Figma */ },
-                onTermsClick = { /* TODO: tela não existe no Figma */ },
-                onLogout = {
-                    setup.reset()
-                    simulation.reset()
-                    Graph.auth.logout()
-                    nav.navigateClearingStack(Routes.LOGIN)
-                },
+                // As quatro linhas abrem diálogos (não há telas para elas no Figma).
+                onPersonalDataClick = { dialog = ProfileDialog.PersonalData },
+                onSecurityClick = { dialog = ProfileDialog.Security },
+                onAboutClick = { dialog = ProfileDialog.About },
+                onTermsClick = { dialog = ProfileDialog.Terms },
+                // Sair pede confirmação: um toque acidental não derruba a sessão.
+                onLogout = { dialog = ProfileDialog.Logout },
                 onTabSelected = onTab,
             )
+            val close = { dialog = null }
+            when (dialog) {
+                ProfileDialog.PersonalData -> MessageDialog(
+                    title = stringResource(R.string.profile_personal_data),
+                    primaryText = stringResource(R.string.action_close_dialog),
+                    onPrimary = close, onDismiss = close,
+                ) {
+                    DialogField(stringResource(R.string.profile_data_name), profile.name)
+                    DialogField(stringResource(R.string.profile_data_email), profile.email)
+                    DialogBody(stringResource(R.string.profile_data_note))
+                }
+                ProfileDialog.Security -> MessageDialog(
+                    title = stringResource(R.string.profile_security),
+                    primaryText = stringResource(R.string.profile_security_action),
+                    // Reaproveita a tela 07: o link de troca é o mesmo da recuperação de senha.
+                    onPrimary = { dialog = null; nav.navigate(Routes.RECOVER_PASSWORD) },
+                    onDismiss = close,
+                    secondaryText = stringResource(R.string.action_cancel),
+                ) { DialogBody(stringResource(R.string.profile_security_body)) }
+                ProfileDialog.About -> MessageDialog(
+                    title = stringResource(R.string.profile_about),
+                    primaryText = stringResource(R.string.action_close_dialog),
+                    onPrimary = close, onDismiss = close,
+                ) {
+                    DialogBody(stringResource(R.string.profile_about_body))
+                    DialogBody(stringResource(R.string.profile_about_version, appVersion()))
+                }
+                ProfileDialog.Terms -> MessageDialog(
+                    title = stringResource(R.string.profile_terms),
+                    primaryText = stringResource(R.string.action_close_dialog),
+                    onPrimary = close, onDismiss = close,
+                ) { DialogBody(stringResource(R.string.profile_terms_body)) }
+                ProfileDialog.Logout -> MessageDialog(
+                    title = stringResource(R.string.profile_logout_title),
+                    // A ação recomendada é ficar; sair é a alternativa.
+                    primaryText = stringResource(R.string.profile_logout_stay),
+                    onPrimary = close,
+                    onDismiss = close,
+                    secondaryText = stringResource(R.string.profile_logout),
+                    onSecondary = {
+                        dialog = null
+                        setup.reset()
+                        simulation.reset()
+                        Graph.auth.logout()
+                        nav.navigateClearingStack(Routes.LOGIN)
+                    },
+                ) { DialogBody(stringResource(R.string.profile_logout_body)) }
+                null -> Unit
+            }
         }
 
         // ---- 20 Estado vazio de Objetivos ----
@@ -538,6 +592,19 @@ fun SobraNavHost(modifier: Modifier = Modifier) {
         composable(Routes.SESSION_EXPIRED) {
             SessionExpiredScreen(onLogin = { nav.navigateClearingStack(Routes.LOGIN) })
         }
+    }
+}
+
+/** Diálogos abertos pelas linhas do Perfil. */
+private enum class ProfileDialog { PersonalData, Security, About, Terms, Logout }
+
+/** Versão do app (versionName do build.gradle), mostrada em "Sobre". */
+@Composable
+private fun appVersion(): String {
+    val context = LocalContext.current
+    return remember {
+        runCatching { context.packageManager.getPackageInfo(context.packageName, 0).versionName }
+            .getOrNull() ?: "1.0"
     }
 }
 

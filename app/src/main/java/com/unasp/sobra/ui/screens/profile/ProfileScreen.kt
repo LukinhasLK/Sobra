@@ -46,12 +46,13 @@ private val AvatarSize = 72.dp
 private val AvatarShadowBlur = 12.dp
 private val AvatarShadowOffsetY = 4.dp
 private val RowHeight = 52.dp
-private val SwitchRowHeight = 56.dp
+private val SwitchRowHeight = 64.dp // 56 no Figma; +8 para caber a legenda
 
 private val Initials = manrope(24, FontWeight.W800)
 private val UserName = manrope(18, FontWeight.W700)
 private val UserEmail = manrope(13, FontWeight.W400)
 private val RowText = manrope(15, FontWeight.W500)
+private val RowSubtitle = manrope(12, FontWeight.W400)
 
 /** 19 Perfil. Rolável: os 897 do frame do Figma são o conteúdo crescendo. */
 @Composable
@@ -112,6 +113,7 @@ fun ProfileScreen(
                     SettingsRow(stringResource(R.string.profile_security), onSecurityClick)
                     SettingsRow(
                         text = stringResource(R.string.profile_notifications),
+                        subtitle = stringResource(R.string.profile_notifications_hint),
                         onClick = { onNotificationsChange(!notificationsEnabled) },
                         height = SwitchRowHeight,
                         showDivider = false,
@@ -159,6 +161,7 @@ private fun SettingsRow(
     text: String,
     onClick: () -> Unit,
     height: Dp = RowHeight,
+    subtitle: String? = null,
     textColor: Color = SobraColors.TextPrimary,
     showDivider: Boolean = true,
     trailing: @Composable () -> Unit = { SobraIcon(R.drawable.ic_chevron_right_16, tint = SobraColors.TextSecondary) },
@@ -181,7 +184,11 @@ private fun SettingsRow(
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Text(text, style = RowText, color = textColor)
+        Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(Dimens.Space2)) {
+            Text(text, style = RowText, color = textColor)
+            // Explica o que a opção faz (ex.: o interruptor de notificações).
+            if (subtitle != null) Text(subtitle, style = RowSubtitle, color = SobraColors.TextSecondary)
+        }
         trailing()
     }
 }

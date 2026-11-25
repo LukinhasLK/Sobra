@@ -285,4 +285,19 @@
     <string name="saved_empty_title">Nenhuma simulação salva</string>
     <string name="saved_empty_description">Faça uma simulação e toque em Salvar para guardá-la aqui.</string>
     <string name="saved_empty_button">Fazer uma simulação</string>
+
+    <!-- Perfil refinado -->
+    <string name="profile_notifications_hint">Lembretes para registrar gastos e aportes</string>
+    <string name="profile_data_name">Nome</string>
+    <string name="profile_data_email">E-mail</string>
+    <string name="profile_data_note">A edição dos dados ainda não está disponível no app.</string>
+    <string name="profile_security_body">Para trocar sua senha, enviamos um link para o seu e-mail. O link vale por 30 minutos e encerra as sessões abertas em outros aparelhos.</string>
+    <string name="profile_security_action">Trocar senha</string>
+    <string name="profile_about_body">O Sobra mostra quanto sobra da sua renda depois dos gastos do mês e ajuda você a guardar esse valor em objetivos.</string>
+    <string name="profile_about_version">Versão %1$s</string>
+    <string name="profile_terms_body">Guardamos seu nome, e-mail, renda, gastos, objetivos e simulações apenas para o funcionamento do app. Sua senha é guardada de forma criptografada e só você vê os seus dados. Você pode pedir a exclusão da conta a qualquer momento.</string>
+    <string name="profile_logout_title">Sair da conta?</string>
+    <string name="profile_logout_body">Para voltar, você vai precisar entrar de novo com e-mail e senha.</string>
+    <string name="profile_logout_stay">Continuar conectado</string>
+    <string name="action_close_dialog">Fechar</string>
 </resources>

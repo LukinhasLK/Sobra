@@ -42,6 +42,7 @@ import java.time.ZoneOffset
 
 private val DialogTitle = manrope(18, FontWeight.W700)
 private val DialogText = manrope(14, FontWeight.W400)
+private val DialogValue = manrope(15, FontWeight.W600)
 
 /** Moldura comum dos diálogos: card branco centralizado com título. */
 @Composable
@@ -57,6 +58,44 @@ private fun PickerDialog(title: String, onDismiss: () -> Unit, content: @Composa
             Text(title, style = DialogTitle, color = SobraColors.TextPrimary)
             content()
         }
+    }
+}
+
+/**
+ * Diálogo de mensagem: título, conteúdo livre e até dois botões. O botão principal (Teal escuro)
+ * é a ação recomendada; o secundário (fundo suave) é a alternativa.
+ */
+@Composable
+fun MessageDialog(
+    title: String,
+    primaryText: String,
+    onPrimary: () -> Unit,
+    onDismiss: () -> Unit,
+    secondaryText: String? = null,
+    onSecondary: () -> Unit = onDismiss,
+    content: @Composable () -> Unit,
+) {
+    PickerDialog(title, onDismiss) {
+        content()
+        Column(verticalArrangement = Arrangement.spacedBy(Dimens.Space12)) {
+            PrimaryButton(primaryText, onPrimary)
+            if (secondaryText != null) SecondaryButton(secondaryText, onSecondary)
+        }
+    }
+}
+
+/** Texto corrido de um diálogo (14/400, cinza). */
+@Composable
+fun DialogBody(text: String) {
+    Text(text, style = DialogText, color = SobraColors.TextSecondary)
+}
+
+/** Linha "rótulo / valor" de um diálogo (ex.: Nome — Ana Souza). */
+@Composable
+fun DialogField(label: String, value: String) {
+    Column(verticalArrangement = Arrangement.spacedBy(Dimens.Space2)) {
+        Text(label, style = SobraType.FormLabel, color = SobraColors.TextSecondary)
+        Text(value, style = DialogValue, color = SobraColors.TextPrimary)
     }
 }
 
