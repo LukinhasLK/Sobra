@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -45,7 +46,6 @@ import com.unasp.sobra.R
 import com.unasp.sobra.ui.components.BottomTab
 import com.unasp.sobra.ui.components.ChevronTitleHeader
 import com.unasp.sobra.ui.components.CompactButton
-import com.unasp.sobra.ui.components.SobraDivider
 import com.unasp.sobra.ui.components.SobraIcon
 import com.unasp.sobra.ui.components.SobraScreen
 import com.unasp.sobra.ui.components.StateContent
@@ -73,16 +73,14 @@ private val SkeletonNotification = 36.dp
 private val SkeletonIcon = 36.dp
 private val SkeletonLine = 16.dp        // altura dos placeholders de texto
 private val SkeletonTitle = 20.dp       // altura da saudação e do título da seção
-private val SkeletonHighlightHeight = 32.dp
+private val SkeletonTileIcon = 32.dp
+private val SkeletonAvailableHeight = 136.dp
 private val SkeletonBar = 8.dp
 private val SkeletonBarRadius = 4.dp
 private val SkeletonRowHeight = 60.dp
 private val W60 = 60.dp
-private val W70 = 70.dp
 private val W80 = 80.dp
-private val W90 = 90.dp
 private val W100 = 100.dp
-private val W110 = 110.dp
 private val W120 = 120.dp
 private val W160 = 160.dp
 private const val SKELETON_ROWS = 3
@@ -138,27 +136,36 @@ fun HomeSkeletonScreen(onTabSelected: (BottomTab) -> Unit, modifier: Modifier = 
             }
             Placeholder(brush, SkeletonNotification, SkeletonNotification, CircleShape)
         }
-        // Card: padding 24, gap 20, raio 24.
-        Column(
+        // Renda e Gastos lado a lado + Disponível em destaque (mesma estrutura da Home refinada).
+        Row(
             modifier = Modifier
-                .padding(Dimens.Space24)
                 .fillMaxWidth()
-                .sobraCard(Dimens.Radius24)
-                .padding(Dimens.Space24),
-            verticalArrangement = Arrangement.spacedBy(Dimens.Space20),
+                .padding(start = Dimens.ScreenMargin, end = Dimens.ScreenMargin, top = Dimens.Space16),
+            horizontalArrangement = Arrangement.spacedBy(Dimens.Space12),
         ) {
-            SkeletonLinePair(brush, W80, W100)
-            SkeletonLinePair(brush, W90, W100)
-            SobraDivider()
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Placeholder(brush, W70, SkeletonLine)
-                Placeholder(brush, W110, SkeletonHighlightHeight, RoundedCornerShape(Dimens.Radius12))
+            repeat(2) {
+                Column(
+                    modifier = Modifier
+                        .weight(1f)
+                        .sobraCard(Dimens.Radius24)
+                        .padding(Dimens.Space16),
+                    verticalArrangement = Arrangement.spacedBy(Dimens.Space12),
+                ) {
+                    Placeholder(brush, SkeletonTileIcon, SkeletonTileIcon, CircleShape)
+                    Placeholder(brush, W60, SkeletonLine)
+                    Placeholder(brush, W100, SkeletonLine)
+                }
             }
         }
+        Box(
+            Modifier
+                .padding(horizontal = Dimens.ScreenMargin, vertical = Dimens.Space12)
+                .fillMaxWidth()
+                .height(SkeletonAvailableHeight)
+                .clip(RoundedCornerShape(Dimens.Radius24))
+                .background(brush),
+        )
+        Spacer(Modifier.height(Dimens.Space12))
         // Seção: padding 0/24/24/24, gap 16 (título → lista) e 12 (entre linhas).
         Column(
             modifier = Modifier.padding(start = Dimens.ScreenMargin, end = Dimens.ScreenMargin, bottom = Dimens.Space24),

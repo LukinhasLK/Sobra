@@ -303,10 +303,14 @@ fun SobraNavHost(modifier: Modifier = Modifier) {
                     onTabSelected = onTab,
                 )
                 is Load.Success -> HomeScreen(
-                    userName = state.data.firstName,
+                    userName = state.data.summary.firstName,
                     avatar = R.drawable.img_avatar, // TODO: a API devolve avatar_url (catálogo de imagens)
-                    income = state.data.income,
-                    spending = state.data.spending,
+                    income = state.data.summary.income,
+                    spending = state.data.summary.spending,
+                    goals = state.data.goals,
+                    onGoalClick = { nav.navigate(Routes.goalDetail(it.id)) },
+                    onSeeAllGoals = { onTab(BottomTab.Goals) },
+                    onAddGoal = { nav.navigate(Routes.NEW_GOAL) },
                     onNotificationsClick = { /* TODO: tela de notificações não existe no Figma */ },
                     onTabSelected = onTab,
                 )

@@ -240,4 +240,12 @@
     <string name="contribution_type_monthly">Mensal</string>
     <string name="contribution_type_extra">Extra</string>
     <string name="goal_detail_forecast_none">—</string>
+
+    <!-- Home refinada -->
+    <string name="home_spent_caption">%1$d%% da renda já foi gasto</string>
+    <string name="home_overspent">Seus gastos passaram da renda deste mês</string>
+    <string name="home_goals_title">Seus objetivos</string>
+    <string name="home_goals_see_all">Ver todos</string>
+    <string name="home_goals_add">Novo objetivo</string>
+    <string name="home_spending_empty">Nenhum gasto registrado neste mês.</string>
 </resources>

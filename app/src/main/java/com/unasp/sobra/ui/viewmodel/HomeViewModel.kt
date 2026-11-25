@@ -7,12 +7,18 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.unasp.sobra.data.Graph
 import com.unasp.sobra.data.HomeData
+import com.unasp.sobra.ui.model.Goal
 import java.time.YearMonth
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
+
+/** Tudo que a Home mostra: resumo do mês e o carrossel de objetivos. */
+data class HomeUi(val summary: HomeData, val goals: List<Goal>)
 
 /** Home: skeleton (21) = [Load.Loading], erro (22) = [Load.Error], tela pronta (10) = [Load.Success]. */
 class HomeViewModel : ViewModel() {
-    var state by mutableStateOf<Load<HomeData>>(Load.Loading)
+    var state by mutableStateOf<Load<HomeUi>>(Load.Loading)
         private set
 
     /** Também é o "Tentar novamente" da tela de erro. */
@@ -31,7 +37,14 @@ class HomeViewModel : ViewModel() {
 
     private fun fetch(keepOnError: Boolean) {
         viewModelScope.launch {
-            val result = loadResult { Graph.home.load(YearMonth.now()) }
+            val result = loadResult {
+                // As duas buscas saem ao mesmo tempo (async); se uma falhar, a Home mostra o erro.
+                coroutineScope {
+                    val summary = async { Graph.home.load(YearMonth.now()) }
+                    val goals = async { Graph.goals.list() }
+                    HomeUi(summary.await(), goals.await())
+                }
+            }
             if (result is Load.Error && keepOnError) return@launch
             state = result
         }

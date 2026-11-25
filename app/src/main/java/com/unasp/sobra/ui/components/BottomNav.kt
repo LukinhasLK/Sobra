@@ -13,12 +13,15 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.tooling.preview.Preview
@@ -43,8 +46,8 @@ enum class BottomTab(@param:StringRes val label: Int, @param:DrawableRes val ico
 }
 
 /**
- * Navegação inferior própria (não é a NavigationBar do Material: aquela tem 80 de altura e
- * uma cápsula atrás do ícone ativo, que o design não tem).
+ * Navegação inferior própria (não é a NavigationBar do Material, que tem 80 de altura).
+ * A aba ativa ganha uma pílula TealLight atrás do ícone e do texto (referência: app Stoic).
  */
 @Composable
 fun BottomNav(
@@ -88,10 +91,14 @@ private fun NavItem(tab: BottomTab, isSelected: Boolean, onClick: () -> Unit) {
     Column(
         modifier = Modifier
             .size(width = ItemWidth, height = ItemHeight)
+            // Pílula da aba ativa: recorta e pinta o fundo antes do toque, para a onda ficar dentro.
+            .clip(RoundedCornerShape(Dimens.RadiusFull))
+            .background(if (isSelected) SobraColors.TealLight else Color.Transparent)
             // selectable = clickable que informa "selecionado" ao leitor de tela.
             .selectable(selected = isSelected, role = Role.Tab, onClick = onClick),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(Dimens.Space4),
+        // Centraliza ícone e texto na altura da pílula.
+        verticalArrangement = Arrangement.spacedBy(Dimens.Space2, Alignment.CenterVertically),
     ) {
         SobraIcon(tab.icon, tint = color)
         Text(
