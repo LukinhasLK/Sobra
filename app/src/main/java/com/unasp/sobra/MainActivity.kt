@@ -7,6 +7,7 @@ import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
+import com.unasp.sobra.data.Graph
 import com.unasp.sobra.navigation.SobraNavHost
 import com.unasp.sobra.ui.theme.SobraTheme
 
@@ -15,6 +16,7 @@ class MainActivity : ComponentActivity() {
         // Splash de sistema (SplashScreen API): precisa vir antes do super.onCreate.
         // Fundo Teal e ícone são definidos em res/values/themes.xml.
         installSplashScreen()
+        Graph.init(this) // token da sessão e cliente da API
         super.onCreate(savedInstanceState)
         // Edge-to-edge: o app desenha por baixo da status bar e da barra de gestos; as
         // telas usam statusBarsPadding()/navigationBarsPadding() para não ficar atrás delas.

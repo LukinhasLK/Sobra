@@ -10,6 +10,7 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.core.view.WindowCompat
@@ -22,6 +23,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.unasp.sobra.R
 import com.unasp.sobra.data.DemoData
+import com.unasp.sobra.data.Graph
 import com.unasp.sobra.domain.SimulationResult
 import com.unasp.sobra.domain.simulate
 import com.unasp.sobra.ui.components.BottomTab
@@ -49,6 +51,9 @@ import com.unasp.sobra.ui.screens.states.ConfirmationModal
 import com.unasp.sobra.ui.screens.states.ErrorScreen
 import com.unasp.sobra.ui.screens.states.HomeSkeletonScreen
 import com.unasp.sobra.ui.screens.states.SessionExpiredScreen
+import com.unasp.sobra.ui.viewmodel.AuthViewModel
+import com.unasp.sobra.ui.viewmodel.HomeState
+import com.unasp.sobra.ui.viewmodel.HomeViewModel
 import java.time.LocalDate
 import java.time.YearMonth
 import kotlinx.coroutines.delay
@@ -137,6 +142,11 @@ fun SobraNavHost(modifier: Modifier = Modifier) {
     // Último resultado calculado em "Simular", lido pela tela de resultado.
     var simulationResult by remember { mutableStateOf<SimulationResult?>(null) }
 
+    // Quando a API diz que a sessão venceu (qualquer tela), abre a tela 24 e limpa a pilha.
+    LaunchedEffect(Unit) {
+        Graph.session.expired.collect { nav.navigateClearingStack(Routes.SESSION_EXPIRED) }
+    }
+
     NavHost(navController = nav, startDestination = Routes.SPLASH, modifier = modifier) {
 
         // ---- 01 Splash ----
@@ -145,7 +155,10 @@ fun SobraNavHost(modifier: Modifier = Modifier) {
             // LaunchedEffect(Unit) roda uma única vez quando a tela entra; delay não trava a UI.
             LaunchedEffect(Unit) {
                 delay(SPLASH_DURATION_MS)
-                nav.navigate(Routes.ONBOARDING_1) { popUpTo(Routes.SPLASH) { inclusive = true } }
+                // Com token salvo, pula onboarding e login (se o token estiver vencido, a Home
+                // recebe SESSAO_EXPIRADA e abre a tela 24).
+                val next = if (Graph.session.token != null) Routes.HOME else Routes.ONBOARDING_1
+                nav.navigate(next) { popUpTo(Routes.SPLASH) { inclusive = true } }
             }
             SplashScreen()
         }
@@ -171,15 +184,21 @@ fun SobraNavHost(modifier: Modifier = Modifier) {
             // A senha fica só em memória de propósito (não é salva no estado da Activity).
             var password by remember { mutableStateOf("") }
             var passwordVisible by rememberSaveable { mutableStateOf(false) }
+            val auth: AuthViewModel = viewModel()
             LoginScreen(
+                errorMessage = auth.error,
                 email = email, onEmailChange = { email = it },
                 password = password, onPasswordChange = { password = it },
                 passwordVisible = passwordVisible,
                 onTogglePasswordVisibility = { passwordVisible = !passwordVisible },
                 onBack = { nav.popBackStack() },
                 onForgotPassword = { nav.navigate(Routes.RECOVER_PASSWORD) },
-                // TODO(back end): autenticar antes de navegar; tratar erro de credenciais.
-                onLogin = { nav.navigateClearingStack(Routes.HOME) },
+                onLogin = {
+                    auth.login(email, password) { setupDone ->
+                        // Conta nova sem configuração segue para renda e categorias.
+                        nav.navigateClearingStack(if (setupDone) Routes.HOME else Routes.INCOME)
+                    }
+                },
                 onCreateAccount = { nav.navigate(Routes.REGISTER) },
             )
         }
@@ -190,14 +209,17 @@ fun SobraNavHost(modifier: Modifier = Modifier) {
             var email by rememberSaveable { mutableStateOf("") }
             var password by remember { mutableStateOf("") }
             var confirmPassword by remember { mutableStateOf("") }
+            val auth: AuthViewModel = viewModel()
             RegisterScreen(
+                errorMessage = auth.error,
                 name = name, onNameChange = { name = it },
                 email = email, onEmailChange = { email = it },
                 password = password, onPasswordChange = { password = it },
                 confirmPassword = confirmPassword, onConfirmPasswordChange = { confirmPassword = it },
                 onBack = { nav.popBackStack() },
-                // TODO(back end): criar a conta antes de seguir para a configuração.
-                onCreateAccount = { nav.navigate(Routes.INCOME) },
+                onCreateAccount = {
+                    auth.register(name, email, password, confirmPassword) { nav.navigate(Routes.INCOME) }
+                },
                 onGoToLogin = { nav.popBackStack(Routes.LOGIN, inclusive = false) },
             )
         }
@@ -236,14 +258,24 @@ fun SobraNavHost(modifier: Modifier = Modifier) {
 
         // ---- 10 Home ----
         composable(Routes.HOME) {
-            HomeScreen(
-                userName = DemoData.USER_FIRST_NAME,
-                avatar = R.drawable.img_avatar,
-                income = DemoData.homeIncome,
-                spending = DemoData.homeSpending,
-                onNotificationsClick = { /* TODO: tela de notificações não existe no Figma */ },
-                onTabSelected = onTab,
-            )
+            val vm: HomeViewModel = viewModel()
+            // As três telas que o design já tinha: skeleton (21), erro (22) e a Home (10).
+            when (val state = vm.state) {
+                HomeState.Loading -> HomeSkeletonScreen(onTabSelected = onTab)
+                HomeState.Error -> ErrorScreen(
+                    onBack = vm::load, // a Home é a raiz: não há tela anterior, então "voltar" recarrega
+                    onRetry = vm::load,
+                    onTabSelected = onTab,
+                )
+                is HomeState.Success -> HomeScreen(
+                    userName = state.data.firstName,
+                    avatar = R.drawable.img_avatar, // TODO: a API devolve avatar_url (catálogo de imagens)
+                    income = state.data.income,
+                    spending = state.data.spending,
+                    onNotificationsClick = { /* TODO: tela de notificações não existe no Figma */ },
+                    onTabSelected = onTab,
+                )
+            }
         }
 
         // ---- 11 Gastos ----
@@ -379,7 +411,10 @@ fun SobraNavHost(modifier: Modifier = Modifier) {
                 onSecurityClick = { /* TODO: tela não existe no Figma */ },
                 onAboutClick = { /* TODO: tela não existe no Figma */ },
                 onTermsClick = { /* TODO: tela não existe no Figma */ },
-                onLogout = { nav.navigateClearingStack(Routes.LOGIN) }, // TODO(back end): encerrar a sessão
+                onLogout = {
+                    Graph.auth.logout()
+                    nav.navigateClearingStack(Routes.LOGIN)
+                },
                 onTabSelected = onTab,
             )
         }

@@ -30,6 +30,7 @@ import com.unasp.sobra.ui.components.SoftField
 import com.unasp.sobra.ui.components.TextLink
 import com.unasp.sobra.ui.theme.Dimens
 import com.unasp.sobra.ui.theme.SobraColors
+import com.unasp.sobra.ui.theme.SobraType
 import com.unasp.sobra.ui.theme.SobraTheme
 import com.unasp.sobra.ui.theme.manrope
 
@@ -51,6 +52,14 @@ private fun AuthForm(content: @Composable () -> Unit) {
     ) { content() }
 }
 
+/** Mensagem de erro do formulário (credenciais erradas, e-mail repetido...). Some quando é null. */
+@Composable
+private fun FormError(message: String?) {
+    if (message != null) {
+        Text(text = message, style = SobraType.FormLabel, color = SobraColors.Red)
+    }
+}
+
 /** 05 Login. Tela sem estado: tudo que muda chega por parâmetro e sai por callback. */
 @Composable
 fun LoginScreen(
@@ -65,6 +74,7 @@ fun LoginScreen(
     onLogin: () -> Unit,
     onCreateAccount: () -> Unit,
     modifier: Modifier = Modifier,
+    errorMessage: String? = null,
 ) {
     FormScreen(
         modifier = modifier,
@@ -110,6 +120,7 @@ fun LoginScreen(
                 modifier = Modifier.fillMaxWidth(),
                 textAlign = TextAlign.End,
             )
+            FormError(errorMessage)
         }
     }
 }
@@ -129,6 +140,7 @@ fun RegisterScreen(
     onCreateAccount: () -> Unit,
     onGoToLogin: () -> Unit,
     modifier: Modifier = Modifier,
+    errorMessage: String? = null,
 ) {
     FormScreen(
         modifier = modifier,
@@ -193,6 +205,7 @@ fun RegisterScreen(
                 keyboardOptions = PasswordKeyboard,
                 visualTransformation = PasswordVisualTransformation(),
             )
+            FormError(errorMessage)
         }
     }
 }
